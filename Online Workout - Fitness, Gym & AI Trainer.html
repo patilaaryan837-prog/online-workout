@@ -1,0 +1,2682 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Online Workout — Gym, Workout Timer &amp; AI Personal Trainer</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: '#090D16',
+            surface: '#121826',
+            surfaceHover: '#182032',
+            emeraldBrand: '#10B981',
+            cyanBrand: '#06B6D4',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #05080F;
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Sleek custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #090D16;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    /* Hide scrollbar on horizontal pill bars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Active timer pulse glow */
+    @keyframes timerPulse {
+      0%, 100% { box-shadow: 0 0 22px rgba(16, 185, 129, 0.14); }
+      50% { box-shadow: 0 0 36px rgba(6, 182, 212, 0.28); }
+    }
+    .timer-running-glow {
+      animation: timerPulse 2.2s infinite ease-in-out;
+    }
+
+    /* AI typing indicator dots */
+    @keyframes bounceDot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+    .typing-dot:nth-child(1) { animation: bounceDot 1.4s infinite ease-in-out both; animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation: bounceDot 1.4s infinite ease-in-out both; animation-delay: -0.16s; }
+    .typing-dot:nth-child(3) { animation: bounceDot 1.4s infinite ease-in-out both; }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center bg-[#05080F]">
+
+  <!-- Main Mobile-First App Shell -->
+  <div id="app-shell" class="w-full max-w-lg min-h-screen bg-[#090D16] border-x border-slate-800/75 flex flex-col relative shadow-2xl">
+
+    <!-- ========================================================= -->
+    <!-- TOP STICKY HEADER: BRANDING, DOWNLOAD & TIER PILL         -->
+    <!-- ========================================================= -->
+    <header class="sticky top-0 z-30 bg-[#090D16]/95 backdrop-blur-xl border-b border-slate-800/80 px-3.5 py-2.5">
+      <div class="flex items-center justify-between gap-2">
+        <!-- Brand Logo & App Name -->
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
+            <!-- Inline SVG Fitness Pulse Icon -->
+            <svg class="w-4 h-4 text-slate-950" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-sm font-extrabold tracking-tight text-white truncate">
+              Online <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Workout</span>
+            </h1>
+            <div id="header-plan-badge" class="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Free Tier
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Controls: Download HTML Button + Tier Switcher Pill -->
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button
+            type="button"
+            onclick="handleDownloadAppHtml()"
+            class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95"
+            title="Download standalone index.html file"
+          >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download</span>
+          </button>
+
+          <div class="bg-[#121826] border border-slate-800 rounded-xl p-0.5 flex items-center" title="Preview Subscription Tier">
+            <button type="button" onclick="setSubscriptionTier('free', true)" id="demo-btn-free" class="px-2 py-1 rounded-lg text-[10px] font-extrabold bg-emerald-500 text-slate-950 transition">Free</button>
+            <button type="button" onclick="setSubscriptionTier('nova', true)" id="demo-btn-nova" class="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition">₹49</button>
+            <button type="button" onclick="setSubscriptionTier('pro', true)" id="demo-btn-pro" class="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition">₹99</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- MAIN SCROLLABLE WORKSPACE                                 -->
+    <!-- ========================================================= -->
+    <main id="main-content" class="flex-1 overflow-y-auto px-4 pt-4 pb-44 space-y-5">
+
+      <!-- ======================================================= -->
+      <!-- SCREEN 1: TODAY'S ROUTINE (WHAT EXERCISE TO DO TODAY)   -->
+      <!-- ======================================================= -->
+      <section id="tab-today" class="space-y-4">
+        <!-- Today's Recorded Time Snapshot -->
+        <div class="bg-[#121826] border border-slate-800/90 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Daily Activity Snapshot</p>
+              <h2 class="text-sm font-extrabold text-white mt-0.5">Today's Recorded Workout Time</h2>
+            </div>
+            <span id="today-date-label" class="px-2.5 py-1 rounded-lg bg-[#090D16] border border-slate-800 text-[11px] font-mono text-slate-300"></span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div onclick="jumpToTimer('running')" class="cursor-pointer bg-[#090D16] hover:border-cyan-500/40 border border-slate-800 rounded-xl p-2.5 transition">
+              <div class="flex items-center gap-1 text-cyan-400 text-[10px] font-bold">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="13" cy="4" r="2"></circle>
+                  <path d="M18 13l-3.5-3.5L11 13l-4 4"></path>
+                  <path d="M14.5 9.5L12 16l4 5"></path>
+                  <path d="M6 11l3-3 2.5 1.5"></path>
+                </svg>
+                <span>Running</span>
+              </div>
+              <p id="today-running-total" class="font-mono text-xs sm:text-sm font-extrabold text-white mt-1">00m 00s</p>
+            </div>
+
+            <div onclick="jumpToTimer('gym')" class="cursor-pointer bg-[#090D16] hover:border-emerald-500/40 border border-slate-800 rounded-xl p-2.5 transition">
+              <div class="flex items-center gap-1 text-emerald-400 text-[10px] font-bold">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6.5 6.5h11"></path>
+                  <path d="M6.5 17.5h11"></path>
+                  <path d="M3 10v4"></path>
+                  <path d="M21 10v4"></path>
+                  <path d="M6 7v10"></path>
+                  <path d="M18 7v10"></path>
+                  <line x1="6" y1="12" x2="18" y2="12"></line>
+                </svg>
+                <span>Gym</span>
+              </div>
+              <p id="today-gym-total" class="font-mono text-xs sm:text-sm font-extrabold text-white mt-1">00m 00s</p>
+            </div>
+
+            <div onclick="jumpToTimer('exercise')" class="cursor-pointer bg-[#090D16] hover:border-violet-500/40 border border-slate-800 rounded-xl p-2.5 transition">
+              <div class="flex items-center gap-1 text-violet-400 text-[10px] font-bold">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                </svg>
+                <span>Exercise</span>
+              </div>
+              <p id="today-exercise-total" class="font-mono text-xs sm:text-sm font-extrabold text-white mt-1">00m 00s</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mon–Sun Day Selector Pills -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Weekly Workout Routine</h3>
+            <button type="button" onclick="selectDayOfWeek(new Date().getDay())" class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300">Jump to Today</button>
+          </div>
+          <div id="weekday-pills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Active Day Routine Overview Card -->
+        <div class="bg-gradient-to-br from-[#121826] to-[#0F172A] border border-slate-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span id="routine-day-badge" class="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 mb-1.5">
+                TODAY
+              </span>
+              <h2 id="routine-title" class="text-base font-extrabold text-white">Push Day: Chest, Shoulders &amp; Triceps</h2>
+              <p id="routine-subtitle" class="text-xs text-slate-400 mt-0.5"></p>
+            </div>
+            <span id="routine-duration-est" class="px-2.5 py-1 rounded-xl bg-[#090D16] border border-slate-800 font-mono text-[11px] font-bold text-cyan-400 shrink-0">
+              ~55 min
+            </span>
+          </div>
+
+          <!-- Daily Completion Progress Bar -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-semibold text-slate-400">Today's Checklist Progress</span>
+              <span id="routine-progress-text" class="font-mono font-bold text-emerald-400">0 / 5 Done</span>
+            </div>
+            <div class="w-full h-2 bg-[#090D16] rounded-full overflow-hidden border border-slate-800">
+              <div id="routine-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Start Workout CTA -->
+          <button type="button" onclick="startTodaysFirstWorkout()" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition active:scale-95">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span>Start Today's Workout Timer</span>
+          </button>
+        </div>
+
+        <!-- Today's Scheduled Exercises Checklist -->
+        <div id="today-exercise-list" class="space-y-2.5">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- SCREEN 2: MULTI-MODE WORKOUT TIMERS                     -->
+      <!-- ======================================================= -->
+      <section id="tab-timers" class="hidden space-y-4">
+        <!-- Today's Total Workout Time Summary -->
+        <div class="bg-[#121826] border border-slate-800/90 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-white">Today's Total Workout Time</h2>
+            <span id="summary-combined-total" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 font-mono text-xs font-extrabold text-emerald-400">
+              Total: 00m 00s
+            </span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div class="bg-[#090D16] border border-slate-800 rounded-xl p-2.5">
+              <p class="text-[10px] font-bold text-cyan-400">Running Time</p>
+              <p id="summary-running-time" class="font-mono text-xs sm:text-sm font-extrabold text-white mt-1">00m 00s</p>
+            </div>
+            <div class="bg-[#090D16] border border-slate-800 rounded-xl p-2.5">
+              <p class="text-[10px] font-bold text-emerald-400">Gym Time</p>
+              <p id="summary-gym-time" class="font-mono text-xs sm:text-sm font-extrabold text-white mt-1">00m 00s</p>
+            </div>
+            <div class="bg-[#090D16] border border-slate-800 rounded-xl p-2.5">
+              <p class="text-[10px] font-bold text-violet-400">Exercise Time</p>
+              <p id="summary-exercise-time" class="font-mono text-xs sm:text-sm font-extrabold text-white mt-1">00m 00s</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3-Mode Timer Selector Cards -->
+        <div class="grid grid-cols-3 gap-2 bg-[#121826] border border-slate-800 p-1.5 rounded-2xl">
+          <button type="button" onclick="setTimerMode('running')" id="timer-mode-running" class="py-2.5 px-2 rounded-xl text-xs font-extrabold flex flex-col items-center gap-1 transition bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 shadow-md">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="13" cy="4" r="2"></circle>
+              <path d="M18 13l-3.5-3.5L11 13l-4 4"></path>
+              <path d="M14.5 9.5L12 16l4 5"></path>
+            </svg>
+            <span>Running Time</span>
+          </button>
+          <button type="button" onclick="setTimerMode('gym')" id="timer-mode-gym" class="py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition text-slate-400 hover:text-white">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 7v10"></path>
+              <path d="M18 7v10"></path>
+              <line x1="6" y1="12" x2="18" y2="12"></line>
+              <path d="M3 10v4"></path>
+              <path d="M21 10v4"></path>
+            </svg>
+            <span>Gym Time</span>
+          </button>
+          <button type="button" onclick="setTimerMode('exercise')" id="timer-mode-exercise" class="py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition text-slate-400 hover:text-white">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="13" r="8"></circle>
+              <path d="M12 9v4l2 2"></path>
+              <path d="M9 2h6"></path>
+            </svg>
+            <span>Exercise Time</span>
+          </button>
+        </div>
+
+        <!-- Main Chronograph Card -->
+        <div id="timer-card-container" class="bg-[#121826] border border-slate-800 rounded-3xl p-5 space-y-4 transition-all">
+          <div class="flex items-center justify-between">
+            <span id="timer-mode-badge" class="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 text-[10px] font-extrabold tracking-wider">
+              RUNNING TIME
+            </span>
+            <span id="timer-status-hint" class="text-[11px] text-slate-400">Ready to track session</span>
+          </div>
+
+          <!-- Digital Readout -->
+          <div class="text-center py-3.5 bg-[#090D16] border border-slate-800/90 rounded-2xl">
+            <div id="timer-display" class="font-mono text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
+              00:00:00<span id="timer-ms" class="text-xl sm:text-2xl text-emerald-400">.00</span>
+            </div>
+          </div>
+
+          <!-- Session / Exercise Label Input -->
+          <div>
+            <input
+              type="text"
+              id="timer-exercise-label"
+              placeholder="Session or exercise name (e.g. Morning 5K Run, Bench Press)..."
+              class="w-full bg-[#090D16] border border-slate-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none"
+            />
+          </div>
+
+          <!-- Mode Helper 1: Running Distance (km) & Live Pace -->
+          <div id="timer-helper-running" class="bg-[#090D16] border border-slate-800/90 rounded-xl p-2.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold text-cyan-400">Distance (km):</span>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                id="timer-running-km"
+                oninput="updateRunningPace()"
+                placeholder="5.0"
+                class="w-16 bg-[#121826] border border-slate-700 rounded-lg px-2 py-1 font-mono text-xs text-white focus:outline-none focus:border-cyan-400"
+              />
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 block">Live Pace</span>
+              <span id="timer-running-pace" class="font-mono text-xs font-extrabold text-emerald-400">--:-- /km</span>
+            </div>
+          </div>
+
+          <!-- Mode Helper 2: Gym Set Counter & 60s / 90s Rest Countdown -->
+          <div id="timer-helper-gym" class="hidden bg-[#090D16] border border-slate-800/90 rounded-xl p-2.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[11px] font-bold text-emerald-400">Sets:</span>
+              <button type="button" onclick="adjustGymSet(-1)" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center">-</button>
+              <span id="gym-set-count" class="font-mono text-xs font-extrabold text-white px-1">1</span>
+              <button type="button" onclick="adjustGymSet(1)" class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center">+</button>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span id="gym-rest-display" class="font-mono text-[11px] font-bold text-cyan-400">Rest: Ready</span>
+              <button type="button" onclick="startGymRestTimer(60)" class="px-2 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-[10px] font-extrabold transition">
+                60s
+              </button>
+              <button type="button" onclick="startGymRestTimer(90)" class="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[10px] font-extrabold transition">
+                90s
+              </button>
+            </div>
+          </div>
+
+          <!-- Mode Helper 3: Bodyweight / Yoga Rounds Note -->
+          <div id="timer-helper-exercise" class="hidden bg-[#090D16] border border-slate-800/90 rounded-xl p-2.5 flex items-center gap-2">
+            <span class="text-[11px] font-bold text-violet-400 shrink-0">Rounds / Hold:</span>
+            <input
+              type="text"
+              id="timer-exercise-note"
+              placeholder="e.g. 4 Rounds • 45s work / 15s rest"
+              class="w-full bg-transparent text-xs text-slate-200 placeholder-slate-500 focus:outline-none"
+            />
+          </div>
+
+          <!-- Primary Controls: Start/Pause + Lap/Set -->
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="toggleTimer()" id="timer-start-btn" class="col-span-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-95">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Start Timer</span>
+            </button>
+            <button type="button" onclick="recordLap()" class="py-3.5 px-3 rounded-2xl bg-[#090D16] hover:bg-slate-800 border border-slate-700 text-cyan-300 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-95">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+              <span>Lap / Set</span>
+            </button>
+          </div>
+
+          <!-- Secondary Controls: Reset + Save Session -->
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="resetTimer()" class="py-2.5 px-4 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              <span>Reset</span>
+            </button>
+            <button type="button" onclick="saveTimerSession()" class="py-2.5 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 transition active:scale-95">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <span>Save Session</span>
+            </button>
+          </div>
+
+          <!-- Laps / Sets Log -->
+          <div id="timer-laps-container" class="hidden pt-2 border-t border-slate-800 space-y-1.5">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recorded Laps / Sets</p>
+            <div id="timer-laps-list" class="max-h-28 overflow-y-auto space-y-1"></div>
+          </div>
+        </div>
+
+        <!-- Saved Workout History Log -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Saved Workout History</h3>
+            <button type="button" onclick="clearSessionHistory()" class="text-[11px] font-semibold text-rose-400 hover:text-rose-300">Clear All</button>
+          </div>
+          <div id="activity-history-list" class="space-y-2">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- SCREEN 3: ALL EXERCISES LIBRARY (26 EXERCISES)          -->
+      <!-- ======================================================= -->
+      <section id="tab-exercises" class="hidden space-y-4">
+        <div class="space-y-1">
+          <h2 class="text-base font-extrabold text-white">Complete Exercise Directory</h2>
+          <p class="text-xs text-slate-400">26 exercises across Gym, Running, Bodyweight &amp; Yoga with form cues.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="exercise-search-input"
+            oninput="renderExerciseLibrary()"
+            placeholder="Search exercise, muscle group, yoga, cardio..."
+            class="w-full bg-[#121826] border border-slate-800 focus:border-emerald-500 rounded-2xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none transition"
+          />
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          <button type="button" onclick="setExerciseCategory('All')" data-cat="All" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition shrink-0">All (26)</button>
+          <button type="button" onclick="setExerciseCategory('Gym & Strength')" data-cat="Gym & Strength" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#121826] text-slate-300 border border-slate-800 hover:border-slate-700 transition shrink-0">Gym &amp; Strength</button>
+          <button type="button" onclick="setExerciseCategory('Running & Cardio')" data-cat="Running & Cardio" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#121826] text-slate-300 border border-slate-800 hover:border-slate-700 transition shrink-0">Running &amp; Cardio</button>
+          <button type="button" onclick="setExerciseCategory('Exercise & Bodyweight')" data-cat="Exercise & Bodyweight" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#121826] text-slate-300 border border-slate-800 hover:border-slate-700 transition shrink-0">Exercise &amp; Bodyweight</button>
+          <button type="button" onclick="setExerciseCategory('Stretching & Yoga')" data-cat="Stretching & Yoga" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#121826] text-slate-300 border border-slate-800 hover:border-slate-700 transition shrink-0">Stretching &amp; Yoga</button>
+        </div>
+
+        <!-- Exercise Cards List -->
+        <div id="exercise-library-list" class="space-y-3">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- SCREEN 4: NOVA AI & NOVA AI PRO PERSONAL TRAINER        -->
+      <!-- ======================================================= -->
+      <section id="tab-nova" class="hidden space-y-4">
+        <!-- Active AI Header Banner -->
+        <div class="bg-[#121826] border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                <circle cx="12" cy="5" r="2"></circle>
+                <path d="M12 7v4"></path>
+                <line x1="8" y1="16" x2="8" y2="16"></line>
+                <line x1="16" y1="16" x2="16" y2="16"></line>
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-extrabold text-white">Nova AI Trainer</h2>
+                <span id="nova-tier-pill" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300">LOCKED</span>
+              </div>
+              <p id="nova-tier-desc" class="text-[11px] text-slate-400">Unlock AI Coaching starting at ₹49/mo</p>
+            </div>
+          </div>
+          <button type="button" onclick="switchTab('plans')" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-[11px] font-bold text-cyan-400 shrink-0">
+            Plans
+          </button>
+        </div>
+
+        <!-- FREE TIER: LOCKED PREVIEW CARD -->
+        <div id="nova-locked-view" class="bg-[#121826] border border-slate-800 rounded-3xl p-5 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="text-center space-y-1">
+            <h3 class="text-base font-extrabold text-white">Unlock Your AI Personal Trainer</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Choose a Nova AI subscription to unlock real-time form coaching, yoga flows, or full daily diet &amp; muscle gain nutrition.</p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3">
+            <!-- Nova AI ₹49 Card -->
+            <div class="bg-[#090D16] border border-cyan-500/30 rounded-2xl p-4 space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-extrabold text-white">Nova AI</span>
+                <span class="text-base font-extrabold text-cyan-400">₹49<span class="text-[11px] font-normal text-slate-400">/mo</span></span>
+              </div>
+              <ul class="text-xs text-slate-300 space-y-1">
+                <li>• Stretching &amp; Mobility Routines</li>
+                <li>• Yoga Poses &amp; Breathing Flows</li>
+                <li>• Basic / Limited Gym Exercise Form</li>
+              </ul>
+              <button type="button" onclick="openSubscriptionModal('nova')" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs transition active:scale-95">
+                Unlock Nova AI — ₹49/mo
+              </button>
+            </div>
+
+            <!-- Nova AI Pro ₹99 Card -->
+            <div class="bg-[#090D16] border-2 border-emerald-500/60 rounded-2xl p-4 space-y-2.5 relative">
+              <span class="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-extrabold">
+                RECOMMENDED • AD-FREE
+              </span>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-extrabold text-white">Nova AI Pro</span>
+                <span class="text-base font-extrabold text-emerald-400">₹99<span class="text-[11px] font-normal text-slate-400">/mo</span></span>
+              </div>
+              <ul class="text-xs text-slate-300 space-y-1">
+                <li>• <b>All 26 Exercises</b> in Online Workout</li>
+                <li>• <b>Daily Diet Coach:</b> What to Eat &amp; What Not to Eat</li>
+                <li>• <b>Protein, Muscle &amp; Body Gain</b> Balanced Meal Plans</li>
+                <li>• <b>100% Ad-Free Experience</b></li>
+              </ul>
+              <button type="button" onclick="openSubscriptionModal('pro')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs transition active:scale-95">
+                Unlock Nova AI Pro — ₹99/mo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVE TIER (₹49 or ₹99): AI CHAT INTERFACE -->
+        <div id="nova-chat-view" class="hidden space-y-3">
+          <!-- Tier-Tailored Quick Prompt Chips -->
+          <div id="nova-quick-chips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            <!-- Populated dynamically based on tier -->
+          </div>
+
+          <!-- Chat Messages Feed -->
+          <div id="nova-chat-messages" class="bg-[#121826] border border-slate-800 rounded-2xl p-3.5 h-[350px] overflow-y-auto space-y-3">
+            <!-- Messages appended dynamically -->
+          </div>
+
+          <!-- Chat Input Form -->
+          <form onsubmit="handleNovaChatSubmit(event)" class="flex items-center gap-2">
+            <input
+              type="text"
+              id="nova-chat-input"
+              placeholder="Ask Nova AI about exercises, yoga, or diet..."
+              class="flex-1 bg-[#121826] border border-slate-800 focus:border-emerald-500 rounded-2xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none"
+            />
+            <button type="submit" class="p-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold shadow-lg shadow-emerald-500/20 transition active:scale-95 shrink-0" title="Send message">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ======================================================= -->
+      <!-- SCREEN 5: SUBSCRIPTIONS & DIRECT UPI CHECKOUT           -->
+      <!-- ======================================================= -->
+      <section id="tab-plans" class="hidden space-y-4">
+        <div class="space-y-1">
+          <h2 class="text-base font-extrabold text-white">Online Workout Subscriptions</h2>
+          <p class="text-xs text-slate-400">Direct zero-fee UPI payments to <span class="font-mono text-emerald-400">8329161376-2@ybl</span></p>
+        </div>
+
+        <!-- Side-by-Side Comparison Grid for ₹49 and ₹99 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Plan: Nova AI ₹49 -->
+          <div class="bg-[#121826] border border-cyan-500/40 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-400 text-[10px] font-bold">STARTER AI</span>
+                <span class="text-xl font-extrabold text-cyan-400">₹49<span class="text-xs font-normal text-slate-400">/mo</span></span>
+              </div>
+              <h3 class="text-base font-extrabold text-white">Nova AI</h3>
+              <ul class="text-xs text-slate-300 space-y-1.5">
+                <li>✓ AI Stretching &amp; Mobility Routines</li>
+                <li>✓ AI Yoga Poses &amp; Surya Namaskar</li>
+                <li>✓ Basic / Limited Gym Exercise Coaching</li>
+                <li class="text-slate-500">• Partner Banner Shown • No Diet AI</li>
+              </ul>
+            </div>
+            <button type="button" onclick="openSubscriptionModal('nova')" class="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition active:scale-95">
+              Subscribe ₹49
+            </button>
+          </div>
+
+          <!-- Plan: Nova AI Pro ₹99 -->
+          <div class="bg-gradient-to-b from-[#121826] to-[#0D1A18] border-2 border-emerald-500 rounded-2xl p-4 flex flex-col justify-between space-y-3 relative">
+            <span class="absolute -top-2.5 right-3 px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-extrabold">
+              PRO • AD-FREE
+            </span>
+            <div class="space-y-2.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">ALL-ACCESS</span>
+                <span class="text-xl font-extrabold text-emerald-400">₹99<span class="text-xs font-normal text-slate-400">/mo</span></span>
+              </div>
+              <h3 class="text-base font-extrabold text-white">Nova AI Pro</h3>
+              <ul class="text-xs text-slate-200 space-y-1.5">
+                <li>✓ <b>All 26 Exercises</b> Unrestricted Coaching</li>
+                <li>✓ <b>Daily Diet Plan:</b> What to Eat &amp; Avoid</li>
+                <li>✓ <b>Protein, Muscle &amp; Body Gain</b> Foods</li>
+                <li>✓ <b>100% Ad-Free</b> (Banner Removed)</li>
+              </ul>
+            </div>
+            <button type="button" onclick="openSubscriptionModal('pro')" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/25 transition active:scale-95">
+              Subscribe ₹99
+            </button>
+          </div>
+        </div>
+
+        <!-- Free Tier Reset Card -->
+        <div class="bg-[#121826] border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between gap-2">
+          <div>
+            <h4 class="text-xs font-bold text-white">Free Starter Plan (₹0/mo)</h4>
+            <p class="text-[11px] text-slate-400">Timers, Weekly Routine &amp; 26-Exercise Library with Ads</p>
+          </div>
+          <button type="button" onclick="setSubscriptionTier('free', true)" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs shrink-0 transition">
+            Use Free
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- FIXED BOTTOM BAR: AD-BLOCKER-SAFE PARTNER STRIP + NAV     -->
+    <!-- ========================================================= -->
+    <div class="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+      <div class="w-full max-w-lg pointer-events-auto bg-[#090D16]/95 backdrop-blur-xl border-t border-slate-800/90">
+
+        <!-- Ad-Blocker-Safe Partner Banner Slot (Visible on Free & ₹49; Hidden on ₹99 Pro) -->
+        <div id="partner-strip-bar" class="px-3 pt-2 pb-1.5 border-b border-slate-800/80 bg-[#0B101D]">
+          <div id="sponsor-unit-box" class="max-w-[360px] mx-auto bg-gradient-to-r from-[#162033] via-[#1c2840] to-[#14232e] border border-emerald-500/35 rounded-xl px-2.5 py-2 flex items-center justify-between gap-2 shadow-lg">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 text-slate-950 flex items-center justify-center shrink-0 shadow">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span id="admob-live-pill" class="px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[9px] font-mono font-extrabold tracking-tight shrink-0">
+                    AdMob Live • ...9994964888
+                  </span>
+                </div>
+                <p id="sponsor-unit-title" class="text-[11px] font-extrabold text-white truncate mt-0.5">Whey Isolate Protein • 25g/Scoop</p>
+                <p id="sponsor-unit-sub" class="text-[10px] text-slate-300 truncate">Lab-Tested Recovery Fuel • Flat 20% Off</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <a id="sponsor-unit-cta" href="https://www.google.com/search?q=whey+isolate+protein+india" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 text-[10px] font-extrabold transition shadow whitespace-nowrap">
+                Learn More
+              </a>
+              <button type="button" onclick="openAdNetworkModal()" class="p-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="AdMob & App Settings">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pro Ad-Free Status Bar (Shown only when ₹99 Pro is active) -->
+        <div id="pro-adfree-strip" class="hidden px-3 py-1 border-b border-emerald-500/20 bg-emerald-500/5 text-center">
+          <p class="text-[10px] font-semibold text-emerald-400">
+            Online Workout Pro Active — Ad-Free Mode Enabled
+          </p>
+        </div>
+
+        <!-- 5-Tab Bottom Navigation Bar -->
+        <nav id="bottom-nav" class="grid grid-cols-5 px-1.5 py-1.5">
+          <button type="button" data-tab="today" onclick="switchTab('today')" id="nav-today" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-emerald-400 transition">
+            <svg class="w-4 h-4 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span class="text-[10px] font-bold">Today</span>
+          </button>
+
+          <button type="button" data-tab="timers" onclick="switchTab('timers')" id="nav-timers" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
+            <svg class="w-4 h-4 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="13" r="8"></circle>
+              <path d="M12 9v4l2 2"></path>
+              <path d="M9 2h6"></path>
+            </svg>
+            <span class="text-[10px] font-semibold">Timers</span>
+          </button>
+
+          <button type="button" data-tab="exercises" onclick="switchTab('exercises')" id="nav-exercises" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
+            <svg class="w-4 h-4 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 7v10"></path>
+              <path d="M18 7v10"></path>
+              <line x1="6" y1="12" x2="18" y2="12"></line>
+              <path d="M3 10v4"></path>
+              <path d="M21 10v4"></path>
+            </svg>
+            <span class="text-[10px] font-semibold">Exercises</span>
+          </button>
+
+          <button type="button" data-tab="nova" onclick="switchTab('nova')" id="nav-nova" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
+            <svg class="w-4 h-4 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L14.8 9.2L22 12L14.8 14.8L12 22L9.2 14.8L2 12L9.2 9.2L12 2Z"></path>
+            </svg>
+            <span class="text-[10px] font-semibold">Nova AI</span>
+          </button>
+
+          <button type="button" data-tab="plans" onclick="switchTab('plans')" id="nav-plans" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-400 hover:text-slate-200 transition">
+            <svg class="w-4 h-4 mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"></path>
+            </svg>
+            <span class="text-[10px] font-semibold">Plans</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 1: UPI CHECKOUT & RECEIPT (8329161376-2@ybl)        -->
+  <!-- ========================================================= -->
+  <div id="subscription-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-[#121826] border border-slate-800 rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-extrabold text-white">Online Workout — UPI Checkout</h3>
+          <p class="text-[11px] text-slate-400">Direct Merchant Transfer • Zero Gateway Fees</p>
+        </div>
+        <button type="button" onclick="closeSubscriptionModal()" class="p-2 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Checkout Step Container -->
+      <div id="checkout-form-step" class="space-y-3.5">
+        <!-- Plan Toggle Cards -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div onclick="selectCheckoutPlan('nova')" id="plan-card-nova" class="cursor-pointer rounded-2xl p-3 border transition space-y-1 bg-[#090D16] border-slate-800">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold uppercase text-cyan-400">Starter AI</span>
+              <span id="plan-check-nova" class="w-4 h-4 rounded-full border border-slate-600 flex items-center justify-center text-[10px] font-bold"></span>
+            </div>
+            <h4 class="text-sm font-extrabold text-white">Nova AI</h4>
+            <p class="text-lg font-extrabold text-white">₹49<span class="text-[11px] font-normal text-slate-400">/mo</span></p>
+          </div>
+
+          <div onclick="selectCheckoutPlan('pro')" id="plan-card-pro" class="cursor-pointer rounded-2xl p-3 border transition space-y-1 bg-[#090D16] border-emerald-500">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold uppercase text-emerald-400">Pro • Ad-Free</span>
+              <span id="plan-check-pro" class="w-4 h-4 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-[10px] font-bold">✓</span>
+            </div>
+            <h4 class="text-sm font-extrabold text-white">Nova AI Pro</h4>
+            <p class="text-lg font-extrabold text-white">₹99<span class="text-[11px] font-normal text-slate-400">/mo</span></p>
+          </div>
+        </div>
+
+        <!-- Selected Plan Highlights -->
+        <div id="selected-plan-features" class="bg-[#090D16] border border-slate-800 rounded-2xl p-3 text-xs text-slate-300 space-y-1">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- UPI Payment Box -->
+        <div class="bg-[#090D16] border border-slate-800 rounded-2xl p-4 space-y-3.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white">Payee: Online Workout</span>
+            <span id="checkout-amount-badge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              Pay ₹99
+            </span>
+          </div>
+
+          <!-- Crisp Inline SVG UPI QR Code -->
+          <div class="flex flex-col items-center justify-center bg-white rounded-2xl p-2.5 w-36 h-36 mx-auto shadow-inner">
+            <svg viewBox="0 0 25 25" class="w-full h-full text-slate-950" fill="currentColor">
+              <path d="M0,0h7v7h-7zM1,1v5h5v-5zM2,2h3v3h-3zM18,0h7v7h-7zM19,1v5h5v-5zM20,2h3v3h-3zM0,18h7v7h-7zM1,19v5h5v-5zM2,20h3v3h-3z"/>
+              <path d="M9,1h2v2h-2zM13,1h3v1h-3zM10,4h4v2h-4zM8,8h3v3h-3zM13,8h2v4h-2zM17,9h3v2h-3zM22,9h2v3h-2zM9,13h3v3h-3zM14,14h4v2h-4zM20,14h3v4h-3zM9,18h2v3h-2zM13,19h3v2h-3zM18,19h2v5h-2zM22,21h3v3h-3zM12,23h4v2h-4z"/>
+            </svg>
+          </div>
+          <p class="text-[11px] text-center text-slate-400">Scan or tap below with GPay, PhonePe, Paytm or BHIM</p>
+
+          <!-- UPI ID & Copy Button -->
+          <div class="flex items-center justify-between bg-[#121826] border border-slate-800 rounded-xl px-3 py-2.5">
+            <div>
+              <p class="text-[10px] text-slate-400">Merchant UPI ID</p>
+              <p id="merchant-upi-id" class="text-xs font-mono font-bold text-emerald-400 select-all">8329161376-2@ybl</p>
+            </div>
+            <button type="button" onclick="copyUpiId()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">
+              Copy UPI ID
+            </button>
+          </div>
+
+          <!-- One-Tap UPI Deep Link Button -->
+          <a id="upi-deep-link-btn" href="upi://pay?pa=8329161376-2@ybl&pn=Online%20Workout&am=99&cu=INR" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition">
+            <span>Pay via UPI App (₹99)</span>
+          </a>
+
+          <!-- Optional UTR Reference + Unlock Confirmation Button -->
+          <div class="pt-2 border-t border-slate-800 space-y-2.5">
+            <input
+              type="text"
+              id="utr-input"
+              maxlength="12"
+              placeholder="Optional: 12-digit UPI UTR / Transaction Ref"
+              class="w-full bg-[#121826] border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none"
+            />
+            <button type="button" onclick="confirmPaymentAndUnlock()" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-95">
+              <span>I Have Paid — Unlock Now</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Receipt Confirmation Step -->
+      <div id="checkout-receipt-step" class="hidden bg-[#090D16] border border-emerald-500/40 rounded-2xl p-5 space-y-4 text-center">
+        <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-xl font-extrabold">
+          ✓
+        </div>
+        <div class="space-y-1">
+          <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-extrabold uppercase">Payment Receipt</span>
+          <h4 class="text-base font-extrabold text-white">Online Workout Subscription Active!</h4>
+          <p id="receipt-plan-label" class="text-xs text-slate-300">Nova AI Pro — ₹99/month</p>
+        </div>
+        <div class="bg-[#121826] border border-slate-800 rounded-xl p-3 text-left text-[11px] font-mono space-y-1.5 text-slate-300">
+          <div class="flex justify-between"><span class="text-slate-500">App:</span><span class="text-white font-bold">Online Workout</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Paid To:</span><span class="text-emerald-400">8329161376-2@ybl</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Amount:</span><span id="receipt-amount" class="text-white font-bold">₹99 INR</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Ref ID:</span><span id="receipt-ref" class="text-cyan-400">OW-VERIFIED</span></div>
+        </div>
+        <button type="button" onclick="finishReceiptAndOpenAI()" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold text-xs">
+          Start Coaching with Nova AI
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 2: ADMOB SETTINGS & EXPORT / DOWNLOAD HTML          -->
+  <!-- ========================================================= -->
+  <div id="ad-network-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-[#121826] border border-slate-800 rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-extrabold text-white">Settings &amp; AdMob Configuration</h3>
+          <p class="text-[11px] text-slate-400">Manage AdMob IDs &amp; Download Standalone HTML</p>
+        </div>
+        <button type="button" onclick="closeAdNetworkModal()" class="p-2 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <!-- Export / Download HTML Section -->
+        <div class="bg-[#090D16] border border-emerald-500/35 rounded-2xl p-3.5 space-y-2">
+          <p class="font-bold text-emerald-400">Export App for App Store / Play Store</p>
+          <p class="text-[11px] text-slate-400">Download the self-contained <code class="text-slate-200">index.html</code> file to wrap with Capacitor.</p>
+          <button type="button" onclick="closeAdNetworkModal(); handleDownloadAppHtml();" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold text-xs transition active:scale-95">
+            Download / Copy index.html
+          </button>
+        </div>
+
+        <!-- Mobile AdMob Inputs -->
+        <div class="bg-[#090D16] border border-cyan-500/30 rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <p class="font-bold text-cyan-400">Google AdMob Credentials</p>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-bold">Active</span>
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">AdMob App ID</label>
+            <input type="text" id="input-admob-appid" value="ca-app-pub-1286605104338705~3371340071" class="w-full bg-[#121826] border border-slate-700 rounded-xl px-3 py-2 font-mono text-xs text-emerald-300 focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">AdMob Banner Ad Unit ID</label>
+            <input type="text" id="input-admob-unit" value="ca-app-pub-1286605104338705/9994964888" class="w-full bg-[#121826] border border-slate-700 rounded-xl px-3 py-2 font-mono text-xs text-emerald-300 focus:outline-none focus:border-cyan-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1">
+          <button type="button" onclick="resetAdNetworkConfig()" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition">
+            Reset Default IDs
+          </button>
+          <button type="button" onclick="saveAdNetworkConfig()" class="py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs transition">
+            Save AdMob IDs
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 3: DOWNLOAD / COPY FULL HTML FALLBACK MODAL         -->
+  <!-- ========================================================= -->
+  <div id="download-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-[#121826] border border-slate-800 rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-extrabold text-white">Download Standalone index.html</h3>
+          <p class="text-[11px] text-slate-400">Save or copy the complete Online Workout source code</p>
+        </div>
+        <button type="button" onclick="closeDownloadModal()" class="p-2 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="bg-[#090D16] border border-emerald-500/30 rounded-2xl p-3.5 space-y-1.5 text-slate-300">
+          <p class="font-bold text-emerald-400">How to save if your browser blocks file downloads:</p>
+          <p>1. Tap <b>Copy Full HTML Code</b> below.</p>
+          <p>2. Paste into any text/code editor on your phone or Mac and save as <code class="text-white font-mono">index.html</code>.</p>
+        </div>
+
+        <textarea
+          id="export-html-textarea"
+          readonly
+          rows="7"
+          class="w-full bg-[#090D16] border border-slate-800 rounded-xl p-3 font-mono text-[10px] text-slate-300 focus:outline-none"
+        ></textarea>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="triggerDirectBlobDownload()" class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
+            Retry File Download
+          </button>
+          <button type="button" onclick="copyFullHtmlCode()" class="py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold text-xs transition active:scale-95">
+            Copy Full HTML Code
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- TOAST NOTIFICATION CONTAINER                              -->
+  <!-- ========================================================= -->
+  <div id="toast-container" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2 w-full max-w-xs px-4"></div>
+
+  <!-- ========================================================= -->
+  <!-- APPLICATION JAVASCRIPT (SANDBOX-SAFE & ZERO-DEPENDENCY)   -->
+  <!-- ========================================================= -->
+  <script>
+    // ===========================================================
+    // 1. SANDBOX-SAFE STORAGE HELPER (PREVENTS SecurityError FREEZE)
+    // ===========================================================
+    const memoryStore = {};
+    const safeStorage = {
+      get(key) {
+        try {
+          return window.localStorage.getItem(key);
+        } catch (e) {
+          return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : null;
+        }
+      },
+      set(key, value) {
+        memoryStore[key] = String(value);
+        try {
+          window.localStorage.setItem(key, String(value));
+        } catch (e) {
+          // Gracefully continue using in-memory fallback inside sandboxed iframes
+        }
+      },
+      remove(key) {
+        delete memoryStore[key];
+        try {
+          window.localStorage.removeItem(key);
+        } catch (e) {
+          // Ignore storage restriction
+        }
+      }
+    };
+
+    // ===========================================================
+    // 2. MASTER EXERCISE DIRECTORY (26 EXERCISES)
+    // ===========================================================
+    const EXERCISES = [
+      // GYM & STRENGTH (8)
+      {
+        id: 'gym-bench',
+        name: 'Barbell Bench Press',
+        category: 'Gym & Strength',
+        muscle: 'Chest & Triceps',
+        difficulty: 'Intermediate',
+        prescription: '4 Sets × 8–10 Reps',
+        rest: '90s rest',
+        cues: [
+          'Retract shoulder blades firmly into the bench and plant feet flat.',
+          'Lower the bar with control to mid-chest at a 45-degree elbow angle.',
+          'Press explosively upward while exhaling without locking elbows harshly.'
+        ]
+      },
+      {
+        id: 'gym-incline-db',
+        name: 'Incline Dumbbell Press',
+        category: 'Gym & Strength',
+        muscle: 'Upper Chest',
+        difficulty: 'Intermediate',
+        prescription: '3 Sets × 10–12 Reps',
+        rest: '75s rest',
+        cues: [
+          'Set bench angle to 30 degrees to target upper pectoral fibers.',
+          'Lower dumbbells until elbows dip slightly below bench level.',
+          'Drive dumbbells together at the top with a 1-second chest squeeze.'
+        ]
+      },
+      {
+        id: 'gym-squat',
+        name: 'Barbell Back Squats',
+        category: 'Gym & Strength',
+        muscle: 'Quads & Glutes',
+        difficulty: 'Intermediate',
+        prescription: '4 Sets × 8 Reps',
+        rest: '120s rest',
+        cues: [
+          'Brace your core deeply before un-racking and keep chest proud.',
+          'Push hips back and bend knees until thighs reach parallel.',
+          'Drive through mid-foot and heels to stand tall.'
+        ]
+      },
+      {
+        id: 'gym-deadlift',
+        name: 'Conventional Deadlift',
+        category: 'Gym & Strength',
+        muscle: 'Posterior Chain & Back',
+        difficulty: 'Advanced',
+        prescription: '3 Sets × 5–6 Reps',
+        rest: '120s rest',
+        cues: [
+          'Stand with mid-foot under the barbell and grip just outside knees.',
+          'Flatten your spine, engage lats, and pull slack out of the bar.',
+          'Push the floor away and lock hips cleanly at the top.'
+        ]
+      },
+      {
+        id: 'gym-lat-pulldown',
+        name: 'Wide-Grip Lat Pulldown',
+        category: 'Gym & Strength',
+        muscle: 'Lats & Upper Back',
+        difficulty: 'Beginner',
+        prescription: '4 Sets × 12 Reps',
+        rest: '60s rest',
+        cues: [
+          'Lock thighs under the support pad and grip wider than shoulders.',
+          'Pull the bar toward your upper collarbone by driving elbows down.',
+          'Control the eccentric return until arms are fully extended.'
+        ]
+      },
+      {
+        id: 'gym-shoulder-press',
+        name: 'Dumbbell Overhead Shoulder Press',
+        category: 'Gym & Strength',
+        muscle: 'Deltoids & Triceps',
+        difficulty: 'Beginner',
+        prescription: '4 Sets × 10 Reps',
+        rest: '75s rest',
+        cues: [
+          'Brace abs tight so your lower back does not arch.',
+          'Start dumbbells at ear level and press straight overhead.',
+          'Lower smoothly over 2 seconds back to ear height.'
+        ]
+      },
+      {
+        id: 'gym-bicep-curl',
+        name: 'Dumbbell Bicep Curls',
+        category: 'Gym & Strength',
+        muscle: 'Biceps',
+        difficulty: 'Beginner',
+        prescription: '3 Sets × 12–15 Reps',
+        rest: '60s rest',
+        cues: [
+          'Pin elbows close to your ribs throughout each repetition.',
+          'Rotate wrists upward as you curl toward shoulder height.',
+          'Lower slowly to keep constant tension on the biceps.'
+        ]
+      },
+      {
+        id: 'gym-tricep-pushdown',
+        name: 'Cable Tricep Rope Pushdown',
+        category: 'Gym & Strength',
+        muscle: 'Triceps',
+        difficulty: 'Beginner',
+        prescription: '3 Sets × 12–15 Reps',
+        rest: '60s rest',
+        cues: [
+          'Keep upper arms locked vertically beside your torso.',
+          'Extend elbows fully and flare the rope ends outward at the bottom.',
+          'Control the weight back up to a 90-degree elbow bend.'
+        ]
+      },
+
+      // RUNNING & CARDIO (5)
+      {
+        id: 'run-outdoor',
+        name: 'Steady-State Outdoor / Treadmill Run',
+        category: 'Running & Cardio',
+        muscle: 'Cardiovascular Endurance',
+        difficulty: 'Beginner',
+        prescription: '25–35 Mins Zone 2',
+        rest: 'Continuous',
+        cues: [
+          'Maintain an upright posture with a slight forward lean from ankles.',
+          'Aim for 165–175 steps/min with soft mid-foot landings.',
+          'Keep pace conversational so you can speak short phrases.'
+        ]
+      },
+      {
+        id: 'run-treadmill-hiit',
+        name: 'Treadmill HIIT Intervals',
+        category: 'Running & Cardio',
+        muscle: 'VO2 Max & Fat Burn',
+        difficulty: 'Intermediate',
+        prescription: '8 Rounds (45s Sprint / 45s Walk)',
+        rest: '45s walk',
+        cues: [
+          'Set treadmill incline to 1.5% to simulate outdoor wind resistance.',
+          'Sprint at 85% effort during work intervals and step safely to rest.',
+          'Finish with a 5-minute slow walk cool-down.'
+        ]
+      },
+      {
+        id: 'run-sprint-drills',
+        name: '100m Acceleration Sprints',
+        category: 'Running & Cardio',
+        muscle: 'Explosive Power & Hamstrings',
+        difficulty: 'Advanced',
+        prescription: '6 × 100m Sprints',
+        rest: '90s walk back',
+        cues: [
+          'Drive knees high and pump arms vigorously from cheek to hip.',
+          'Build smoothly to top speed over the first 40 meters.',
+          'Walk back slowly for full nervous system recovery.'
+        ]
+      },
+      {
+        id: 'run-jump-rope',
+        name: 'High-Tempo Jump Rope Conditioning',
+        category: 'Running & Cardio',
+        muscle: 'Calves & Coordination',
+        difficulty: 'Beginner',
+        prescription: '5 Sets × 2 Mins',
+        rest: '45s rest',
+        cues: [
+          'Keep elbows tucked near ribs and turn rope with wrists only.',
+          'Bounce 1–2 inches off the floor on the balls of your feet.',
+          'Maintain steady nasal breathing between rounds.'
+        ]
+      },
+      {
+        id: 'run-burpees',
+        name: 'Athletic Burpee Conditioning',
+        category: 'Running & Cardio',
+        muscle: 'Full-Body Cardio & Stamina',
+        difficulty: 'Intermediate',
+        prescription: '4 Sets × 12 Reps',
+        rest: '60s rest',
+        cues: [
+          'Squat down, plant palms shoulder-width apart, and kick feet to plank.',
+          'Perform a crisp push-up, hop feet forward, and jump vertically.',
+          'Land softly with bent knees directly into the next rep.'
+        ]
+      },
+
+      // EXERCISE & BODYWEIGHT (6)
+      {
+        id: 'bw-pushups',
+        name: 'Strict Chest Push-Ups',
+        category: 'Exercise & Bodyweight',
+        muscle: 'Chest, Shoulders & Core',
+        difficulty: 'Beginner',
+        prescription: '4 Sets × 15–20 Reps',
+        rest: '60s rest',
+        cues: [
+          'Place hands slightly wider than shoulders with glutes and abs tight.',
+          'Lower chest until 1 inch above the floor with elbows at 45 degrees.',
+          'Press smoothly back to full arm extension.'
+        ]
+      },
+      {
+        id: 'bw-pullups',
+        name: 'Overhand Pull-Ups',
+        category: 'Exercise & Bodyweight',
+        muscle: 'Lats, Upper Back & Forearms',
+        difficulty: 'Advanced',
+        prescription: '4 Sets × 6–10 Reps',
+        rest: '90s rest',
+        cues: [
+          'Start from a dead hang with shoulders depressed away from ears.',
+          'Drive elbows down toward hips until chin clears the bar.',
+          'Lower under full 2-second control without kipping.'
+        ]
+      },
+      {
+        id: 'bw-squats',
+        name: 'Tempo Bodyweight Air Squats',
+        category: 'Exercise & Bodyweight',
+        muscle: 'Quads, Glutes & Mobility',
+        difficulty: 'Beginner',
+        prescription: '4 Sets × 20 Reps',
+        rest: '45s rest',
+        cues: [
+          'Stand with feet shoulder-width apart and toes turned slightly out.',
+          'Descend for 3 seconds until hips drop below knee level.',
+          'Drive through heels to stand and squeeze glutes at top.'
+        ]
+      },
+      {
+        id: 'bw-lunges',
+        name: 'Alternating Walking Lunges',
+        category: 'Exercise & Bodyweight',
+        muscle: 'Glutes, Quads & Balance',
+        difficulty: 'Beginner',
+        prescription: '3 Sets × 12 Reps / Leg',
+        rest: '60s rest',
+        cues: [
+          'Step forward with an upright torso and lower back knee toward floor.',
+          'Keep front knee aligned over your mid-foot.',
+          'Push off the front heel to step smoothly into the next stride.'
+        ]
+      },
+      {
+        id: 'bw-dips',
+        name: 'Parallel Bar / Bench Tricep Dips',
+        category: 'Exercise & Bodyweight',
+        muscle: 'Triceps & Lower Chest',
+        difficulty: 'Intermediate',
+        prescription: '3 Sets × 12 Reps',
+        rest: '60s rest',
+        cues: [
+          'Keep shoulders rolled back and elbows tracking straight behind you.',
+          'Lower until upper arms are parallel to the floor.',
+          'Press back up cleanly without shrugging shoulders.'
+        ]
+      },
+      {
+        id: 'bw-plank',
+        name: 'Core Forearm Plank Hold',
+        category: 'Exercise & Bodyweight',
+        muscle: 'Deep Core & Abs',
+        difficulty: 'Beginner',
+        prescription: '3 Sets × 60 Sec',
+        rest: '45s rest',
+        cues: [
+          'Stack elbows directly beneath shoulders and squeeze glutes.',
+          'Maintain a straight plank line from head to heels.',
+          'Exhale steadily while bracing your abdominal wall.'
+        ]
+      },
+
+      // STRETCHING & YOGA (7)
+      {
+        id: 'yoga-surya',
+        name: 'Surya Namaskar (Sun Salutation)',
+        category: 'Stretching & Yoga',
+        muscle: 'Full-Body Flow & Breath',
+        difficulty: 'Beginner',
+        prescription: '6–10 Complete Rounds',
+        rest: '30s breath',
+        cues: [
+          'Synchronize every posture transition with deep nasal inhales and exhales.',
+          'Flow smoothly through Hasta Uttanasana, Plank, Cobra, and Downward Dog.',
+          'Builds full-body warmth, spinal flexibility, and mental focus.'
+        ]
+      },
+      {
+        id: 'yoga-downward-dog',
+        name: 'Adho Mukha Svanasana (Downward Dog)',
+        category: 'Stretching & Yoga',
+        muscle: 'Spine, Hamstrings & Calves',
+        difficulty: 'Beginner',
+        prescription: '4 Holds × 40 Sec',
+        rest: '20s rest',
+        cues: [
+          'Spread fingers wide and press firmly through palms to lengthen spine.',
+          'Lift sitting bones high toward the ceiling into an inverted V.',
+          'Pedal heels gently toward the floor to open calves and hamstrings.'
+        ]
+      },
+      {
+        id: 'yoga-cobra',
+        name: 'Bhujangasana (Cobra Pose)',
+        category: 'Stretching & Yoga',
+        muscle: 'Spine, Chest & Abs',
+        difficulty: 'Beginner',
+        prescription: '3 Holds × 30 Sec',
+        rest: '20s rest',
+        cues: [
+          'Place palms beneath shoulders and press tops of feet into the mat.',
+          'Inhale and lift chest using back strength with elbows softly bent.',
+          'Draw shoulders down and away from your ears.'
+        ]
+      },
+      {
+        id: 'yoga-warrior2',
+        name: 'Virabhadrasana II (Warrior II)',
+        category: 'Stretching & Yoga',
+        muscle: 'Hips, Legs & Core Stability',
+        difficulty: 'Intermediate',
+        prescription: '3 Holds × 35 Sec / Side',
+        rest: '20s rest',
+        cues: [
+          'Step feet wide, bend front knee over ankle, and ground back heel.',
+          'Extend arms parallel to the floor and gaze over front fingertips.',
+          'Keep torso centered upright between both legs.'
+        ]
+      },
+      {
+        id: 'stretch-hamstring',
+        name: 'Standing Hamstring & Lower Back Stretch',
+        category: 'Stretching & Yoga',
+        muscle: 'Hamstrings & Posterior Chain',
+        difficulty: 'Beginner',
+        prescription: '3 × 30 Sec / Side',
+        rest: '15s rest',
+        cues: [
+          'Extend one heel forward with knee straight and toes pulled up.',
+          'Hinge forward at the hips with a flat spine until a mild stretch is felt.',
+          'Breathe slowly to release muscular tension.'
+        ]
+      },
+      {
+        id: 'stretch-hip-flexor',
+        name: 'Kneeling Hip Flexor Lunge Stretch',
+        category: 'Stretching & Yoga',
+        muscle: 'Hip Flexors & Quads',
+        difficulty: 'Beginner',
+        prescription: '3 × 35 Sec / Side',
+        rest: '15s rest',
+        cues: [
+          'Kneel on one knee with front foot flat at a 90-degree angle.',
+          'Tuck tailbone slightly under and squeeze rear glute.',
+          'Shift hips gently forward without overarching lower back.'
+        ]
+      },
+      {
+        id: 'yoga-child',
+        name: 'Balasana (Restorative Child’s Pose)',
+        category: 'Stretching & Yoga',
+        muscle: 'Lower Back, Hips & Recovery',
+        difficulty: 'Beginner',
+        prescription: '2 Holds × 60 Sec',
+        rest: 'Recovery',
+        cues: [
+          'Bring big toes together, widen knees, and sit hips back onto heels.',
+          'Walk arms forward and rest forehead gently on the mat.',
+          'Take slow 5-second belly breaths to calm heart rate post-workout.'
+        ]
+      }
+    ];
+
+    // 7-Day Weekly Routine Schedule (0 = Sunday ... 6 = Saturday)
+    const WEEKLY_ROUTINES = {
+      1: {
+        dayName: 'Monday',
+        short: 'Mon',
+        title: 'Push Day: Chest, Shoulders & Triceps',
+        subtitle: 'Warm-up stretch followed by pressing strength & core hold.',
+        estDuration: '~55 min',
+        exerciseIds: ['stretch-hip-flexor', 'run-outdoor', 'gym-bench', 'gym-shoulder-press', 'gym-tricep-pushdown', 'bw-plank']
+      },
+      2: {
+        dayName: 'Tuesday',
+        short: 'Tue',
+        title: 'Pull Day: Back, Lats & Biceps',
+        subtitle: 'Build a strong, wide back and arms with strict pulling form.',
+        estDuration: '~50 min',
+        exerciseIds: ['gym-deadlift', 'gym-lat-pulldown', 'bw-pullups', 'gym-bicep-curl', 'yoga-downward-dog']
+      },
+      3: {
+        dayName: 'Wednesday',
+        short: 'Wed',
+        title: 'Running & Cardio Endurance',
+        subtitle: 'Boost cardiovascular stamina, VO2 max, and athletic conditioning.',
+        estDuration: '~40 min',
+        exerciseIds: ['run-outdoor', 'run-jump-rope', 'run-burpees', 'stretch-hamstring', 'stretch-hip-flexor']
+      },
+      4: {
+        dayName: 'Thursday',
+        short: 'Thu',
+        title: 'Legs & Core Power',
+        subtitle: 'Lower-body hypertrophy, glute stability, and deep abdominal strength.',
+        estDuration: '~55 min',
+        exerciseIds: ['gym-squat', 'bw-lunges', 'bw-squats', 'bw-plank', 'stretch-hip-flexor']
+      },
+      5: {
+        dayName: 'Friday',
+        short: 'Fri',
+        title: 'Upper Body & Bodyweight Hypertrophy',
+        subtitle: 'High-volume upper-body pump combining gym & bodyweight movements.',
+        estDuration: '~50 min',
+        exerciseIds: ['gym-incline-db', 'gym-lat-pulldown', 'bw-pushups', 'bw-dips', 'gym-bicep-curl']
+      },
+      6: {
+        dayName: 'Saturday',
+        short: 'Sat',
+        title: 'HIIT Sprints & Athletic Conditioning',
+        subtitle: 'High-intensity interval bursts to accelerate fat burn & speed.',
+        estDuration: '~35 min',
+        exerciseIds: ['run-treadmill-hiit', 'run-sprint-drills', 'bw-plank', 'stretch-hamstring', 'yoga-child']
+      },
+      0: {
+        dayName: 'Sunday',
+        short: 'Sun',
+        title: 'Active Recovery, Yoga & Mobility Flow',
+        subtitle: 'Restore joint mobility, lengthen tight muscles, and recharge.',
+        estDuration: '~30 min',
+        exerciseIds: ['yoga-surya', 'yoga-downward-dog', 'yoga-warrior2', 'stretch-hip-flexor', 'yoga-child']
+      }
+    };
+
+    // Sponsored Partner Banner Creatives
+    const PARTNER_CREATIVES = [
+      {
+        title: 'Whey Isolate Protein • 25g/Scoop',
+        sub: 'Lab-Tested Recovery Fuel • Flat 20% Off',
+        cta: 'Learn More',
+        url: 'https://www.google.com/search?q=whey+isolate+protein+india'
+      },
+      {
+        title: 'Smart Fitness Band • HR & SpO2',
+        sub: 'Track Running Pace & Calories • ₹1,999',
+        cta: 'Learn More',
+        url: 'https://www.google.com/search?q=fitness+smartwatch+india'
+      },
+      {
+        title: 'Electrolyte Hydration Mix • Zero Sugar',
+        sub: 'Instant Gym & Running Stamina Boost',
+        cta: 'Learn More',
+        url: 'https://www.google.com/search?q=electrolyte+hydration+powder'
+      },
+      {
+        title: 'Adjustable Dumbbells & Yoga Mat Kit',
+        sub: 'Complete Home Workout Bundle • Free Delivery',
+        cta: 'Learn More',
+        url: 'https://www.google.com/search?q=adjustable+dumbbells+yoga+mat'
+      }
+    ];
+
+    // ===========================================================
+    // 3. LIVE ADMOB DEFAULTS & SAFE APPLICATION STATE
+    // ===========================================================
+    const DEFAULT_ADMOB_APP_ID = 'ca-app-pub-1286605104338705~3371340071';
+    const DEFAULT_ADMOB_UNIT_ID = 'ca-app-pub-1286605104338705/9994964888';
+
+    const STORAGE_KEYS = {
+      TIER: 'online_workout_plan',
+      SESSIONS: 'online_workout_sessions_v1',
+      COMPLETED: 'online_workout_completed_v1',
+      AD_CONFIG: 'online_workout_ad_config_v1'
+    };
+
+    function safeJsonParse(raw, fallback) {
+      if (!raw) return fallback;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    let appState = {
+      activeTab: 'today',
+      selectedDay: new Date().getDay(),
+      selectedCategory: 'All',
+      tier: safeStorage.get(STORAGE_KEYS.TIER) || 'free', // 'free' | 'nova' | 'pro'
+      checkoutPlan: 'pro', // 'nova' | 'pro'
+      sessions: safeJsonParse(safeStorage.get(STORAGE_KEYS.SESSIONS), []),
+      completedMap: safeJsonParse(safeStorage.get(STORAGE_KEYS.COMPLETED), {}),
+      chatHistory: [],
+      isAiGenerating: false
+    };
+
+    function getTodayDateKey() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function saveSessionsToStorage() {
+      safeStorage.set(STORAGE_KEYS.SESSIONS, JSON.stringify(appState.sessions));
+    }
+
+    function saveCompletedToStorage() {
+      safeStorage.set(STORAGE_KEYS.COMPLETED, JSON.stringify(appState.completedMap));
+    }
+
+    // ===========================================================
+    // 4. CUSTOM TOAST NOTIFICATIONS (NO alert() / confirm())
+    // ===========================================================
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const bgStyle = type === 'error'
+        ? 'bg-rose-950/95 border-rose-500/50 text-rose-200'
+        : type === 'info'
+        ? 'bg-slate-900/95 border-cyan-500/50 text-cyan-200'
+        : 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200';
+
+      toast.className = `${bgStyle} border backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-xl text-xs font-semibold text-center transition-all duration-300 transform translate-y-0 opacity-100`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2800);
+    }
+
+    // ===========================================================
+    // 5. BULLETPROOF TAB NAVIGATION
+    // ===========================================================
+    function switchTab(tabName) {
+      appState.activeTab = tabName;
+      ['today', 'timers', 'exercises', 'nova', 'plans'].forEach(t => {
+        const section = document.getElementById(`tab-${t}`);
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (!section || !navBtn) return;
+
+        if (t === tabName) {
+          section.classList.remove('hidden');
+          section.style.display = 'block';
+          navBtn.classList.remove('text-slate-400');
+          navBtn.classList.add('text-emerald-400');
+        } else {
+          section.classList.add('hidden');
+          section.style.display = 'none';
+          navBtn.classList.remove('text-emerald-400');
+          navBtn.classList.add('text-slate-400');
+        }
+      });
+
+      const mainEl = document.getElementById('main-content');
+      if (mainEl) mainEl.scrollTop = 0;
+      try {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (e) {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    // ===========================================================
+    // 6. DOWNLOAD / EXPORT STANDALONE HTML FEATURE
+    // ===========================================================
+    function getCleanHtmlExportString() {
+      // Clone document and reset transient modals/toasts for clean export
+      const clone = document.documentElement.cloneNode(true);
+      const modalIds = ['subscription-modal', 'ad-network-modal', 'download-modal'];
+      modalIds.forEach(id => {
+        const el = clone.querySelector(`#${id}`);
+        if (el) el.classList.add('hidden');
+      });
+      const toastEl = clone.querySelector('#toast-container');
+      if (toastEl) toastEl.innerHTML = '';
+      return '<!DOCTYPE html>\n' + clone.outerHTML;
+    }
+
+    function triggerDirectBlobDownload() {
+      try {
+        const htmlContent = getCleanHtmlExportString();
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'index.html';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        showToast('Downloading index.html...');
+      } catch (err) {
+        showToast('Use Copy Full HTML Code below to save index.html', 'info');
+      }
+    }
+
+    function handleDownloadAppHtml() {
+      triggerDirectBlobDownload();
+      const textarea = document.getElementById('export-html-textarea');
+      if (textarea) {
+        textarea.value = getCleanHtmlExportString();
+      }
+      const modal = document.getElementById('download-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeDownloadModal() {
+      const modal = document.getElementById('download-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function copyFullHtmlCode() {
+      const textarea = document.getElementById('export-html-textarea');
+      if (!textarea) return;
+      textarea.focus();
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      try {
+        document.execCommand('copy');
+        showToast('Full index.html code copied to clipboard!');
+      } catch (e) {
+        showToast('Select all text in the box and copy manually.', 'info');
+      }
+    }
+
+    // ===========================================================
+    // 7. TODAY'S ROUTINE & WORKOUT TIME SUMMARIES
+    // ===========================================================
+    function formatDurationShort(totalSeconds) {
+      const hrs = Math.floor(totalSeconds / 3600);
+      const mins = Math.floor((totalSeconds % 3600) / 60);
+      const secs = Math.floor(totalSeconds % 60);
+      if (hrs > 0) return `${hrs}h ${String(mins).padStart(2, '0')}m`;
+      return `${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+    }
+
+    function updateDailyTimeSummaries() {
+      const todayKey = getTodayDateKey();
+      const todaySessions = appState.sessions.filter(s => s.dateKey === todayKey);
+
+      let runningSec = 0;
+      let gymSec = 0;
+      let exerciseSec = 0;
+
+      todaySessions.forEach(s => {
+        if (s.mode === 'running') runningSec += s.durationSec;
+        else if (s.mode === 'gym') gymSec += s.durationSec;
+        else exerciseSec += s.durationSec;
+      });
+
+      const totalSec = runningSec + gymSec + exerciseSec;
+
+      document.getElementById('summary-running-time').textContent = formatDurationShort(runningSec);
+      document.getElementById('summary-gym-time').textContent = formatDurationShort(gymSec);
+      document.getElementById('summary-exercise-time').textContent = formatDurationShort(exerciseSec);
+      document.getElementById('summary-combined-total').textContent = `Total: ${formatDurationShort(totalSec)}`;
+
+      document.getElementById('today-running-total').textContent = formatDurationShort(runningSec);
+      document.getElementById('today-gym-total').textContent = formatDurationShort(gymSec);
+      document.getElementById('today-exercise-total').textContent = formatDurationShort(exerciseSec);
+    }
+
+    function renderWeekdayPills() {
+      const container = document.getElementById('weekday-pills');
+      if (!container) return;
+      const realToday = new Date().getDay();
+      const dayOrder = [1, 2, 3, 4, 5, 6, 0]; // Mon -> Sun
+
+      container.innerHTML = dayOrder.map(dayIdx => {
+        const r = WEEKLY_ROUTINES[dayIdx];
+        const isSelected = appState.selectedDay === dayIdx;
+        const isToday = realToday === dayIdx;
+
+        const classes = isSelected
+          ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold shadow-md shadow-emerald-500/20'
+          : 'bg-[#121826] text-slate-300 border border-slate-800 hover:border-slate-700 font-semibold';
+
+        return `
+          <button type="button" onclick="selectDayOfWeek(${dayIdx})" class="${classes} px-3.5 py-2 rounded-xl text-xs transition shrink-0 flex flex-col items-center min-w-[54px]">
+            <span>${r.short}</span>
+            ${isToday ? `<span class="w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-slate-950' : 'bg-emerald-400'} mt-0.5"></span>` : `<span class="h-1.5 mt-0.5"></span>`}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectDayOfWeek(dayIdx) {
+      appState.selectedDay = dayIdx;
+      renderWeekdayPills();
+      renderTodayRoutine();
+    }
+
+    function toggleExerciseCompleted(exerciseId) {
+      const dateKey = getTodayDateKey();
+      const key = `${dateKey}_${appState.selectedDay}_${exerciseId}`;
+      appState.completedMap[key] = !appState.completedMap[key];
+      saveCompletedToStorage();
+      renderTodayRoutine();
+    }
+
+    function startTodaysFirstWorkout() {
+      const routine = WEEKLY_ROUTINES[appState.selectedDay];
+      if (!routine || !routine.exerciseIds.length) {
+        switchTab('timers');
+        return;
+      }
+      const firstEx = EXERCISES.find(e => e.id === routine.exerciseIds[0]);
+      if (!firstEx) {
+        switchTab('timers');
+        return;
+      }
+      const mode = firstEx.category === 'Running & Cardio' ? 'running' : firstEx.category === 'Gym & Strength' ? 'gym' : 'exercise';
+      jumpToTimer(mode, firstEx.name);
+    }
+
+    function renderTodayRoutine() {
+      const routine = WEEKLY_ROUTINES[appState.selectedDay];
+      const realToday = new Date().getDay();
+      const dateKey = getTodayDateKey();
+
+      document.getElementById('routine-day-badge').textContent =
+        appState.selectedDay === realToday ? `TODAY • ${routine.dayName.toUpperCase()}` : `${routine.dayName.toUpperCase()} SCHEDULE`;
+      document.getElementById('routine-title').textContent = routine.title;
+      document.getElementById('routine-subtitle').textContent = routine.subtitle;
+      document.getElementById('routine-duration-est').textContent = routine.estDuration;
+
+      const listEl = document.getElementById('today-exercise-list');
+      let completedCount = 0;
+
+      listEl.innerHTML = routine.exerciseIds.map(exId => {
+        const ex = EXERCISES.find(e => e.id === exId);
+        if (!ex) return '';
+        const compKey = `${dateKey}_${appState.selectedDay}_${ex.id}`;
+        const isDone = !!appState.completedMap[compKey];
+        if (isDone) completedCount++;
+
+        const timerMode = ex.category === 'Running & Cardio' ? 'running' : ex.category === 'Gym & Strength' ? 'gym' : 'exercise';
+        const safeName = ex.name.replace(/'/g, "\\'");
+
+        return `
+          <div class="bg-[#121826] border ${isDone ? 'border-emerald-500/35 bg-emerald-500/5' : 'border-slate-800/90'} rounded-2xl p-3.5 flex items-center justify-between gap-3 transition">
+            <div class="flex items-start gap-3 min-w-0">
+              <button type="button" onclick="toggleExerciseCompleted('${ex.id}')" class="mt-0.5 w-6 h-6 rounded-lg border ${isDone ? 'bg-emerald-500 border-emerald-500 text-slate-950 font-extrabold' : 'border-slate-600 hover:border-emerald-400'} flex items-center justify-center shrink-0 transition text-xs">
+                ${isDone ? '✓' : ''}
+              </button>
+              <div class="min-w-0">
+                <h4 class="text-sm font-bold ${isDone ? 'line-through text-slate-400' : 'text-white'} truncate">${ex.name}</h4>
+                <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                  <span class="text-[11px] font-mono font-semibold text-emerald-400">${ex.prescription}</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-[11px] text-slate-400">${ex.muscle}</span>
+                  <span class="text-slate-600">•</span>
+                  <span class="text-[10px] font-mono text-cyan-400">${ex.rest}</span>
+                </div>
+              </div>
+            </div>
+            <button type="button" onclick="jumpToTimer('${timerMode}', '${safeName}')" class="px-3 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-bold shrink-0 transition active:scale-95">
+              Time This
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      const total = routine.exerciseIds.length;
+      const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+      document.getElementById('routine-progress-text').textContent = `${completedCount} / ${total} Done`;
+      document.getElementById('routine-progress-bar').style.width = `${pct}%`;
+    }
+
+    // ===========================================================
+    // 8. ALL EXERCISES LIBRARY
+    // ===========================================================
+    function setExerciseCategory(cat) {
+      appState.selectedCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'cat-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 text-slate-950 transition shrink-0';
+        } else {
+          btn.className = 'cat-pill px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#121826] text-slate-300 border border-slate-800 hover:border-slate-700 transition shrink-0';
+        }
+      });
+      renderExerciseLibrary();
+    }
+
+    function renderExerciseLibrary() {
+      const searchEl = document.getElementById('exercise-search-input');
+      const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+      const container = document.getElementById('exercise-library-list');
+      if (!container) return;
+
+      const filtered = EXERCISES.filter(ex => {
+        const matchesCat = appState.selectedCategory === 'All' || ex.category === appState.selectedCategory;
+        const matchesQuery = !query ||
+          ex.name.toLowerCase().includes(query) ||
+          ex.muscle.toLowerCase().includes(query) ||
+          ex.category.toLowerCase().includes(query);
+        return matchesCat && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-[#121826] border border-slate-800 rounded-2xl p-6 text-center text-slate-400 text-xs">
+            No exercises found matching "${query}". Try another search term!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(ex => {
+        const timerMode = ex.category === 'Running & Cardio' ? 'running' : ex.category === 'Gym & Strength' ? 'gym' : 'exercise';
+        const diffColor = ex.difficulty === 'Beginner'
+          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+          : ex.difficulty === 'Intermediate'
+          ? 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20'
+          : 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+        const safeName = ex.name.replace(/'/g, "\\'");
+
+        return `
+          <div class="bg-[#121826] border border-slate-800/90 rounded-2xl p-4 space-y-3">
+            <div>
+              <div class="flex items-center gap-1.5 mb-1">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-800 text-slate-300">${ex.category}</span>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${diffColor}">${ex.difficulty}</span>
+              </div>
+              <h3 class="text-base font-extrabold text-white">${ex.name}</h3>
+              <p class="text-xs text-slate-400 mt-0.5">${ex.muscle} • <span class="font-mono text-emerald-400 font-semibold">${ex.prescription}</span></p>
+            </div>
+
+            <div class="bg-[#090D16] border border-slate-800/80 rounded-xl p-3 space-y-1.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Form Tip &amp; Execution</p>
+              <ul class="space-y-1 text-xs text-slate-300">
+                ${ex.cues.map((cue, idx) => `
+                  <li class="flex items-start gap-2">
+                    <span class="text-emerald-400 font-mono font-bold text-[11px]">${idx + 1}.</span>
+                    <span>${cue}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+
+            <button type="button" onclick="jumpToTimer('${timerMode}', '${safeName}')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 hover:from-emerald-500/25 hover:to-cyan-500/25 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition active:scale-95">
+              <span>Time This Exercise</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===========================================================
+    // 9. MULTI-MODE WORKOUT TIMERS (RUNNING, GYM & EXERCISE TIME)
+    // ===========================================================
+    let timerState = {
+      mode: 'running', // 'running' | 'gym' | 'exercise'
+      isRunning: false,
+      elapsedMs: 0,
+      lastFrameTime: 0,
+      rafId: null,
+      laps: []
+    };
+
+    let gymSetCount = 1;
+    let gymRestInterval = null;
+
+    function jumpToTimer(mode, exerciseName = '') {
+      switchTab('timers');
+      setTimerMode(mode);
+      if (exerciseName) {
+        const labelInput = document.getElementById('timer-exercise-label');
+        if (labelInput) labelInput.value = exerciseName;
+      }
+      showToast(`Loaded in Timer: ${exerciseName || mode.toUpperCase()}`, 'info');
+    }
+
+    function setTimerMode(mode) {
+      timerState.mode = mode;
+      const modes = ['running', 'gym', 'exercise'];
+      const labels = {
+        running: 'RUNNING TIME',
+        gym: 'GYM TIME',
+        exercise: 'EXERCISE TIME'
+      };
+
+      modes.forEach(m => {
+        const btn = document.getElementById(`timer-mode-${m}`);
+        const helper = document.getElementById(`timer-helper-${m}`);
+        if (!btn) return;
+        if (m === mode) {
+          btn.className = 'py-2.5 px-2 rounded-xl text-xs font-extrabold flex flex-col items-center gap-1 transition bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 shadow-md';
+          if (helper) helper.classList.remove('hidden');
+        } else {
+          btn.className = 'py-2.5 px-2 rounded-xl text-xs font-semibold flex flex-col items-center gap-1 transition text-slate-400 hover:text-white';
+          if (helper) helper.classList.add('hidden');
+        }
+      });
+
+      const badge = document.getElementById('timer-mode-badge');
+      if (badge) badge.textContent = labels[mode];
+    }
+
+    function updateRunningPace() {
+      const kmInput = document.getElementById('timer-running-km');
+      const paceEl = document.getElementById('timer-running-pace');
+      if (!kmInput || !paceEl) return;
+      const km = parseFloat(kmInput.value);
+      const totalSec = timerState.elapsedMs / 1000;
+      if (!km || km <= 0 || totalSec < 1) {
+        paceEl.textContent = '--:-- /km';
+        return;
+      }
+      const secPerKm = totalSec / km;
+      const paceMins = Math.floor(secPerKm / 60);
+      const paceSecs = Math.floor(secPerKm % 60);
+      paceEl.textContent = `${String(paceMins).padStart(2, '0')}:${String(paceSecs).padStart(2, '0')} /km`;
+    }
+
+    function adjustGymSet(delta) {
+      gymSetCount = Math.max(1, gymSetCount + delta);
+      const setEl = document.getElementById('gym-set-count');
+      if (setEl) setEl.textContent = gymSetCount;
+    }
+
+    function startGymRestTimer(seconds) {
+      if (gymRestInterval) clearInterval(gymRestInterval);
+      let remaining = seconds;
+      const display = document.getElementById('gym-rest-display');
+      if (!display) return;
+      display.textContent = `Rest: ${remaining}s`;
+      gymRestInterval = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(gymRestInterval);
+          display.textContent = 'Rest Done!';
+          showToast('Rest complete! Start next set.', 'info');
+        } else {
+          display.textContent = `Rest: ${remaining}s`;
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const totalMs = Math.floor(timerState.elapsedMs);
+      const hrs = Math.floor(totalMs / 3600000);
+      const mins = Math.floor((totalMs % 3600000) / 60000);
+      const secs = Math.floor((totalMs % 60000) / 1000);
+      const cs = Math.floor((totalMs % 1000) / 10);
+
+      const mainStr = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      const msStr = `.${String(cs).padStart(2, '0')}`;
+
+      const displayEl = document.getElementById('timer-display');
+      if (displayEl) {
+        displayEl.innerHTML = `${mainStr}<span id="timer-ms" class="text-xl sm:text-2xl text-emerald-400">${msStr}</span>`;
+      }
+      if (timerState.mode === 'running') {
+        updateRunningPace();
+      }
+    }
+
+    function timerLoop(now) {
+      if (!timerState.isRunning) return;
+      const delta = now - timerState.lastFrameTime;
+      timerState.lastFrameTime = now;
+      timerState.elapsedMs += delta;
+      updateTimerDisplay();
+      timerState.rafId = requestAnimationFrame(timerLoop);
+    }
+
+    function toggleTimer() {
+      const startBtn = document.getElementById('timer-start-btn');
+      const cardContainer = document.getElementById('timer-card-container');
+      const hintEl = document.getElementById('timer-status-hint');
+
+      if (!timerState.isRunning) {
+        timerState.isRunning = true;
+        timerState.lastFrameTime = performance.now();
+        timerState.rafId = requestAnimationFrame(timerLoop);
+
+        startBtn.innerHTML = `<span>Pause</span>`;
+        startBtn.className = 'col-span-2 py-3.5 px-4 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-400/20 flex items-center justify-center gap-2 transition active:scale-95';
+        cardContainer.classList.add('timer-running-glow', 'border-emerald-500/40');
+        hintEl.textContent = 'Recording active workout time...';
+      } else {
+        timerState.isRunning = false;
+        if (timerState.rafId) cancelAnimationFrame(timerState.rafId);
+
+        startBtn.innerHTML = `<span>Resume</span>`;
+        startBtn.className = 'col-span-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-95';
+        cardContainer.classList.remove('timer-running-glow', 'border-emerald-500/40');
+        hintEl.textContent = 'Paused — tap Save Session to log';
+      }
+    }
+
+    function recordLap() {
+      if (timerState.elapsedMs < 100) {
+        showToast('Start the timer first to record a lap/set!', 'info');
+        return;
+      }
+      timerState.laps.unshift(timerState.elapsedMs);
+      const container = document.getElementById('timer-laps-container');
+      const list = document.getElementById('timer-laps-list');
+      container.classList.remove('hidden');
+
+      list.innerHTML = timerState.laps.map((ms, idx) => {
+        const lapNum = timerState.laps.length - idx;
+        return `
+          <div class="flex items-center justify-between bg-[#090D16] px-3 py-1.5 rounded-lg text-xs font-mono">
+            <span class="text-slate-400">Lap / Set #${lapNum}</span>
+            <span class="text-cyan-400 font-bold">${formatDurationShort(Math.floor(ms / 1000))}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function resetTimer() {
+      timerState.isRunning = false;
+      if (timerState.rafId) cancelAnimationFrame(timerState.rafId);
+      timerState.elapsedMs = 0;
+      timerState.laps = [];
+      updateTimerDisplay();
+
+      const startBtn = document.getElementById('timer-start-btn');
+      startBtn.innerHTML = `<svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Start Timer</span>`;
+      startBtn.className = 'col-span-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition active:scale-95';
+      document.getElementById('timer-card-container').classList.remove('timer-running-glow', 'border-emerald-500/40');
+      document.getElementById('timer-status-hint').textContent = 'Ready to track session';
+      document.getElementById('timer-laps-container').classList.add('hidden');
+    }
+
+    function saveTimerSession() {
+      const durationSec = Math.max(1, Math.round(timerState.elapsedMs / 1000));
+      if (timerState.elapsedMs < 1000) {
+        showToast('Run the timer for at least 1 second to save!', 'error');
+        return;
+      }
+
+      const customLabel = document.getElementById('timer-exercise-label').value.trim();
+      const kmVal = document.getElementById('timer-running-km').value.trim();
+      const exerciseNote = document.getElementById('timer-exercise-note').value.trim();
+      const defaultTitles = {
+        running: 'Running Time Session',
+        gym: 'Gym Time Session',
+        exercise: 'Exercise Time Session'
+      };
+
+      let sessionTitle = customLabel || defaultTitles[timerState.mode];
+      if (timerState.mode === 'running' && kmVal) {
+        sessionTitle += ` (${kmVal} km)`;
+      } else if (timerState.mode === 'gym') {
+        sessionTitle += ` (${gymSetCount} ${gymSetCount === 1 ? 'Set' : 'Sets'})`;
+      } else if (timerState.mode === 'exercise' && exerciseNote) {
+        sessionTitle += ` (${exerciseNote})`;
+      }
+
+      // Estimate calories burned based on mode & duration
+      const calRatePerMin = timerState.mode === 'running' ? 11 : timerState.mode === 'gym' ? 7 : 6;
+      const caloriesEst = Math.max(1, Math.round((durationSec / 60) * calRatePerMin));
+
+      const newSession = {
+        id: Date.now().toString(),
+        dateKey: getTodayDateKey(),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        mode: timerState.mode,
+        title: sessionTitle,
+        durationSec,
+        caloriesEst
+      };
+
+      appState.sessions.unshift(newSession);
+      saveSessionsToStorage();
+      updateDailyTimeSummaries();
+      renderActivityHistory();
+      resetTimer();
+      showToast(`Saved ${newSession.title} (${formatDurationShort(durationSec)})!`);
+    }
+
+    function deleteSession(id) {
+      appState.sessions = appState.sessions.filter(s => s.id !== id);
+      saveSessionsToStorage();
+      updateDailyTimeSummaries();
+      renderActivityHistory();
+      showToast('Session deleted', 'info');
+    }
+
+    function clearSessionHistory() {
+      if (appState.sessions.length === 0) return;
+      appState.sessions = [];
+      saveSessionsToStorage();
+      updateDailyTimeSummaries();
+      renderActivityHistory();
+      showToast('Workout history cleared', 'info');
+    }
+
+    function renderActivityHistory() {
+      const container = document.getElementById('activity-history-list');
+      if (!container) return;
+      if (appState.sessions.length === 0) {
+        container.innerHTML = `
+          <div class="bg-[#121826] border border-slate-800/80 rounded-2xl p-5 text-center text-xs text-slate-400">
+            No workout sessions recorded yet. Start the timer above and tap <b>Save Session</b>!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = appState.sessions.map(s => {
+        const badgeStyles = s.mode === 'running'
+          ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
+          : s.mode === 'gym'
+          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+          : 'bg-violet-500/15 text-violet-400 border-violet-500/30';
+
+        const modeLabel = s.mode === 'running' ? 'Running Time' : s.mode === 'gym' ? 'Gym Time' : 'Exercise Time';
+        const kcal = s.caloriesEst || Math.max(1, Math.round((s.durationSec / 60) * 7));
+
+        return `
+          <div class="bg-[#121826] border border-slate-800/90 rounded-2xl p-3 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${badgeStyles}">${modeLabel}</span>
+                <span class="text-[11px] text-slate-500">${s.dateKey} • ${s.timestamp}</span>
+              </div>
+              <p class="text-xs font-bold text-white mt-1 truncate">${s.title}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="text-right">
+                <span class="font-mono text-xs font-bold text-emerald-400 block">${formatDurationShort(s.durationSec)}</span>
+                <span class="font-mono text-[10px] text-amber-400">~${kcal} kcal</span>
+              </div>
+              <button type="button" onclick="deleteSession('${s.id}')" class="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 transition text-xs font-bold" title="Delete session">
+                ✕
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ===========================================================
+    // 10. SUBSCRIPTION TIERS, UPI CHECKOUT & PARTNER BANNER
+    // ===========================================================
+    function setSubscriptionTier(tier, notify = false) {
+      appState.tier = tier;
+      safeStorage.set(STORAGE_KEYS.TIER, tier);
+
+      // Update Header Badge
+      const badge = document.getElementById('header-plan-badge');
+      if (badge) {
+        if (tier === 'free') {
+          badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Free Tier`;
+          badge.className = 'inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400';
+        } else if (tier === 'nova') {
+          badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span> Nova AI (₹49)`;
+          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-cyan-400';
+        } else {
+          badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Nova AI Pro (₹99)`;
+          badge.className = 'inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400';
+        }
+      }
+
+      // Update Top-Right Tier Preview Switcher Pill ("Free | ₹49 | ₹99")
+      ['free', 'nova', 'pro'].forEach(t => {
+        const btn = document.getElementById(`demo-btn-${t}`);
+        if (!btn) return;
+        if (t === tier) {
+          btn.className = 'px-2 py-1 rounded-lg text-[10px] font-extrabold bg-emerald-500 text-slate-950 transition';
+        } else {
+          btn.className = 'px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition';
+        }
+      });
+
+      // Partner Banner Visibility: Visible on Free & Nova ₹49; Hidden on Nova AI Pro ₹99
+      const partnerBar = document.getElementById('partner-strip-bar');
+      const proStrip = document.getElementById('pro-adfree-strip');
+      if (partnerBar && proStrip) {
+        if (tier === 'pro') {
+          partnerBar.classList.add('hidden');
+          proStrip.classList.remove('hidden');
+        } else {
+          partnerBar.classList.remove('hidden');
+          proStrip.classList.add('hidden');
+        }
+      }
+
+      // Sync Native Capacitor AdMob Banner if running inside Android/iOS build
+      syncNativeAdMobBanner(tier);
+
+      // Update Nova AI Tab View
+      updateNovaAiViewForTier();
+
+      if (notify) {
+        const names = { free: 'Free Plan', nova: 'Nova AI (₹49/mo)', pro: 'Nova AI Pro (₹99/mo)' };
+        showToast(`Active Tier: ${names[tier]}`, 'info');
+      }
+    }
+
+    function openSubscriptionModal(preselectPlan = 'pro') {
+      appState.checkoutPlan = preselectPlan;
+      document.getElementById('checkout-form-step').classList.remove('hidden');
+      document.getElementById('checkout-receipt-step').classList.add('hidden');
+      selectCheckoutPlan(preselectPlan);
+      document.getElementById('subscription-modal').classList.remove('hidden');
+    }
+
+    function closeSubscriptionModal() {
+      document.getElementById('subscription-modal').classList.add('hidden');
+    }
+
+    function selectCheckoutPlan(plan) {
+      appState.checkoutPlan = plan;
+      const novaCard = document.getElementById('plan-card-nova');
+      const proCard = document.getElementById('plan-card-pro');
+      const novaCheck = document.getElementById('plan-check-nova');
+      const proCheck = document.getElementById('plan-check-pro');
+      const featuresBox = document.getElementById('selected-plan-features');
+      const amountBadge = document.getElementById('checkout-amount-badge');
+      const deepLinkBtn = document.getElementById('upi-deep-link-btn');
+
+      if (plan === 'nova') {
+        novaCard.className = 'cursor-pointer rounded-2xl p-3 border-2 transition space-y-1 bg-cyan-500/5 border-cyan-400';
+        proCard.className = 'cursor-pointer rounded-2xl p-3 border transition space-y-1 bg-[#090D16] border-slate-800';
+        novaCheck.textContent = '✓';
+        novaCheck.className = 'w-4 h-4 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-[10px] font-bold';
+        proCheck.textContent = '';
+        proCheck.className = 'w-4 h-4 rounded-full border border-slate-600 flex items-center justify-center';
+
+        featuresBox.innerHTML = `
+          <p class="font-bold text-cyan-400">Nova AI (₹49/month) Includes:</p>
+          <p>• AI Stretching, Mobility &amp; Yoga Pose Coaching</p>
+          <p>• Basic / Limited Gym Exercise Assistance</p>
+          <p class="text-slate-500">• Note: Daily Diet &amp; Muscle Gain Foods require Pro (₹99)</p>
+        `;
+        amountBadge.textContent = 'Pay ₹49';
+        deepLinkBtn.href = 'upi://pay?pa=8329161376-2@ybl&pn=Online%20Workout&am=49&cu=INR';
+        deepLinkBtn.innerHTML = `<span>Pay via UPI App (₹49)</span>`;
+      } else {
+        proCard.className = 'cursor-pointer rounded-2xl p-3 border-2 transition space-y-1 bg-emerald-500/5 border-emerald-400';
+        novaCard.className = 'cursor-pointer rounded-2xl p-3 border transition space-y-1 bg-[#090D16] border-slate-800';
+        proCheck.textContent = '✓';
+        proCheck.className = 'w-4 h-4 rounded-full bg-emerald-400 text-slate-950 flex items-center justify-center text-[10px] font-bold';
+        novaCheck.textContent = '';
+        novaCheck.className = 'w-4 h-4 rounded-full border border-slate-600 flex items-center justify-center';
+
+        featuresBox.innerHTML = `
+          <p class="font-bold text-emerald-400">Nova AI Pro (₹99/month) Includes:</p>
+          <p>• Full AI Coaching for ALL 26 Exercises in Online Workout</p>
+          <p>• Daily Diet Coach: What to Eat &amp; What Not to Eat</p>
+          <p>• Protein, Muscle &amp; Body Gain Macros + 100% Ad-Free</p>
+        `;
+        amountBadge.textContent = 'Pay ₹99';
+        deepLinkBtn.href = 'upi://pay?pa=8329161376-2@ybl&pn=Online%20Workout&am=99&cu=INR';
+        deepLinkBtn.innerHTML = `<span>Pay via UPI App (₹99)</span>`;
+      }
+    }
+
+    function copyUpiId() {
+      const upiId = '8329161376-2@ybl';
+      const tempInput = document.createElement('input');
+      tempInput.value = upiId;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast('Copied UPI ID: 8329161376-2@ybl');
+      } catch (e) {
+        showToast('UPI ID: 8329161376-2@ybl', 'info');
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    function confirmPaymentAndUnlock() {
+      const utr = (document.getElementById('utr-input').value || '').trim();
+      const plan = appState.checkoutPlan;
+
+      setSubscriptionTier(plan, false);
+      document.getElementById('utr-input').value = '';
+
+      // Show Payment Receipt inside Modal
+      document.getElementById('checkout-form-step').classList.add('hidden');
+      document.getElementById('checkout-receipt-step').classList.remove('hidden');
+
+      document.getElementById('receipt-plan-label').textContent =
+        plan === 'pro' ? 'Nova AI Pro — ₹99/month (Ad-Free)' : 'Nova AI — ₹49/month';
+      document.getElementById('receipt-amount').textContent = plan === 'pro' ? '₹99 INR' : '₹49 INR';
+      document.getElementById('receipt-ref').textContent = utr ? `UTR-${utr}` : `OW-${Date.now().toString().slice(-6)}`;
+
+      showToast(`${plan === 'pro' ? 'Nova AI Pro (₹99)' : 'Nova AI (₹49)'} unlocked!`);
+    }
+
+    function finishReceiptAndOpenAI() {
+      closeSubscriptionModal();
+      switchTab('nova');
+    }
+
+    // ===========================================================
+    // 11. NATIVE CAPACITOR ADMOB BRIDGE & AD SETUP MODAL
+    // ===========================================================
+    let nativeAdMobInitialized = false;
+
+    async function syncNativeAdMobBanner(plan) {
+      const saved = safeJsonParse(safeStorage.get(STORAGE_KEYS.AD_CONFIG), {});
+      const unitId = saved.admobUnit || DEFAULT_ADMOB_UNIT_ID;
+
+      const pillEl = document.getElementById('admob-live-pill');
+      if (pillEl && unitId) {
+        const suffix = unitId.slice(-10);
+        pillEl.textContent = `AdMob Live • ...${suffix}`;
+      }
+
+      const admobPlugin = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+      if (!admobPlugin) return;
+
+      try {
+        if (!nativeAdMobInitialized) {
+          await admobPlugin.initialize({ initializeForTesting: false });
+          nativeAdMobInitialized = true;
+        }
+
+        if (plan === 'pro') {
+          if (typeof admobPlugin.hideBanner === 'function') await admobPlugin.hideBanner();
+          if (typeof admobPlugin.removeBanner === 'function') await admobPlugin.removeBanner();
+        } else {
+          await admobPlugin.showBanner({
+            adId: unitId,
+            adSize: 'BANNER',
+            position: 'BOTTOM_CENTER',
+            margin: 64,
+            isTesting: false
+          });
+        }
+      } catch (err) {
+        // Ignore when running outside native Capacitor shell
+      }
+    }
+
+    function openAdNetworkModal() {
+      const saved = safeJsonParse(safeStorage.get(STORAGE_KEYS.AD_CONFIG), {});
+      document.getElementById('input-admob-appid').value = saved.admobAppId || DEFAULT_ADMOB_APP_ID;
+      document.getElementById('input-admob-unit').value = saved.admobUnit || DEFAULT_ADMOB_UNIT_ID;
+      document.getElementById('ad-network-modal').classList.remove('hidden');
+    }
+
+    function closeAdNetworkModal() {
+      document.getElementById('ad-network-modal').classList.add('hidden');
+    }
+
+    function saveAdNetworkConfig() {
+      const admobAppId = document.getElementById('input-admob-appid').value.trim() || DEFAULT_ADMOB_APP_ID;
+      const admobUnit = document.getElementById('input-admob-unit').value.trim() || DEFAULT_ADMOB_UNIT_ID;
+
+      safeStorage.set(STORAGE_KEYS.AD_CONFIG, JSON.stringify({ admobAppId, admobUnit }));
+      syncNativeAdMobBanner(appState.tier);
+      closeAdNetworkModal();
+      showToast('AdMob App ID & Unit ID saved!');
+    }
+
+    function resetAdNetworkConfig() {
+      safeStorage.set(STORAGE_KEYS.AD_CONFIG, JSON.stringify({
+        admobAppId: DEFAULT_ADMOB_APP_ID,
+        admobUnit: DEFAULT_ADMOB_UNIT_ID
+      }));
+      document.getElementById('input-admob-appid').value = DEFAULT_ADMOB_APP_ID;
+      document.getElementById('input-admob-unit').value = DEFAULT_ADMOB_UNIT_ID;
+      syncNativeAdMobBanner(appState.tier);
+      closeAdNetworkModal();
+      showToast('Restored default AdMob IDs', 'info');
+    }
+
+    // Rotate Partner Creatives every 8 seconds
+    let partnerIdx = 0;
+    setInterval(() => {
+      partnerIdx = (partnerIdx + 1) % PARTNER_CREATIVES.length;
+      const item = PARTNER_CREATIVES[partnerIdx];
+      const titleEl = document.getElementById('sponsor-unit-title');
+      const subEl = document.getElementById('sponsor-unit-sub');
+      const ctaEl = document.getElementById('sponsor-unit-cta');
+      if (titleEl && subEl && ctaEl) {
+        titleEl.textContent = item.title;
+        subEl.textContent = item.sub;
+        ctaEl.textContent = item.cta;
+        ctaEl.href = item.url;
+      }
+    }, 8000);
+
+    // ===========================================================
+    // 12. NOVA AI & NOVA AI PRO PERSONAL TRAINER
+    // ===========================================================
+    function updateNovaAiViewForTier() {
+      const lockedView = document.getElementById('nova-locked-view');
+      const chatView = document.getElementById('nova-chat-view');
+      const tierPill = document.getElementById('nova-tier-pill');
+      const tierDesc = document.getElementById('nova-tier-desc');
+      const chipsContainer = document.getElementById('nova-quick-chips');
+
+      if (appState.tier === 'free') {
+        lockedView.classList.remove('hidden');
+        chatView.classList.add('hidden');
+        tierPill.textContent = 'LOCKED';
+        tierPill.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300';
+        tierDesc.textContent = 'Unlock AI Coaching starting at ₹49/mo';
+        return;
+      }
+
+      lockedView.classList.add('hidden');
+      chatView.classList.remove('hidden');
+
+      if (appState.tier === 'nova') {
+        tierPill.textContent = 'NOVA AI • ₹49';
+        tierPill.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30';
+        tierDesc.textContent = 'Stretching, Yoga & Basic Gym Form Coach';
+
+        const basicChips = [
+          '10-Min Morning Stretch',
+          'Surya Namaskar Yoga Flow',
+          'Basic Bench Press & Squat Form',
+          'Post-Run Calf Stretch'
+        ];
+        chipsContainer.innerHTML = basicChips.map(prompt => `
+          <button type="button" onclick="sendQuickPrompt('${prompt}')" class="px-3 py-1.5 rounded-xl bg-[#121826] hover:bg-cyan-500/15 border border-slate-800 hover:border-cyan-500/40 text-cyan-300 text-[11px] font-semibold shrink-0 transition">
+            ${prompt}
+          </button>
+        `).join('');
+
+        if (appState.chatHistory.length === 0) {
+          addChatMessage('ai', `Welcome to **Online Workout — Nova AI (₹49 Plan)**!\n\nI can assist you with:\n• **Stretching & Mobility** routines\n• **Yoga Poses & Surya Namaskar** flows\n• **Basic Gym Exercise** form cues\n\n*(Need daily diet plans, what to eat/avoid, protein & muscle gain foods? Upgrade to **Nova AI Pro ₹99** anytime!)*`);
+        }
+      } else if (appState.tier === 'pro') {
+        tierPill.textContent = 'NOVA AI PRO • ₹99';
+        tierPill.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        tierDesc.textContent = 'Full Exercise Coach + Daily Diet & Muscle Gain Nutrition';
+
+        const proChips = [
+          'Daily Muscle Gain Diet Plan',
+          'What to Eat & What Not to Eat',
+          'Best Protein & Body Gain Foods',
+          'Calculate My Balanced Macros'
+        ];
+        chipsContainer.innerHTML = proChips.map(prompt => `
+          <button type="button" onclick="sendQuickPrompt('${prompt}')" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold shrink-0 transition">
+            ${prompt}
+          </button>
+        `).join('');
+
+        if (appState.chatHistory.length === 0) {
+          addChatMessage('ai', `Welcome to **Online Workout — Nova AI Pro (₹99 All-Access)**!\n\nI am your unrestricted personal trainer and sports nutritionist. Ask me about:\n• **All 26 Exercises** across Gym, Running, Bodyweight & Yoga\n• **Daily Diet Plans** (What to eat & what not to eat)\n• **Protein, Muscle Gain & Body Gain** foods\n• **Balanced Diet Macros** tailored to your goals!`);
+        }
+      }
+    }
+
+    function sendQuickPrompt(text) {
+      const input = document.getElementById('nova-chat-input');
+      if (input) input.value = text;
+      handleNovaChatSubmit(new Event('submit'));
+    }
+
+    function formatMarkdownLite(text) {
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em class="text-slate-300">$1</em>')
+        .replace(/\n/g, '<br/>');
+    }
+
+    function addChatMessage(sender, text, showProUpgradeButton = false) {
+      appState.chatHistory.push({ sender, text, showProUpgradeButton });
+      const feed = document.getElementById('nova-chat-messages');
+      if (!feed) return;
+
+      const msgDiv = document.createElement('div');
+      if (sender === 'user') {
+        msgDiv.className = 'flex justify-end';
+        msgDiv.innerHTML = `
+          <div class="max-w-[82%] bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-medium text-xs sm:text-sm px-3.5 py-2.5 rounded-2xl rounded-br-sm shadow">
+            ${formatMarkdownLite(text)}
+          </div>
+        `;
+      } else {
+        msgDiv.className = 'flex justify-start';
+        msgDiv.innerHTML = `
+          <div class="max-w-[88%] bg-[#090D16] border border-slate-800 text-slate-200 text-xs sm:text-sm px-3.5 py-2.5 rounded-2xl rounded-bl-sm space-y-2.5 leading-relaxed">
+            <div>${formatMarkdownLite(text)}</div>
+            ${showProUpgradeButton ? `
+              <button type="button" onclick="openSubscriptionModal('pro')" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md transition active:scale-95">
+                <span>Upgrade to Nova AI Pro — ₹99/mo</span>
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      feed.appendChild(msgDiv);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const feed = document.getElementById('nova-chat-messages');
+      if (!feed) return;
+      const el = document.createElement('div');
+      el.id = 'nova-typing-indicator';
+      el.className = 'flex justify-start';
+      el.innerHTML = `
+        <div class="bg-[#090D16] border border-slate-800 px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1.5">
+          <span class="typing-dot w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="typing-dot w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span class="typing-dot w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        </div>
+      `;
+      feed.appendChild(el);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const el = document.getElementById('nova-typing-indicator');
+      if (el) el.remove();
+    }
+
+    function isProRestrictedQuery(query) {
+      const q = query.toLowerCase();
+      const restrictedKeywords = [
+        'diet', 'eat', 'food', 'protein', 'whey', 'creatine', 'supplement',
+        'nutrition', 'calorie', 'calories', 'meal', 'breakfast', 'lunch', 'dinner',
+        'weight gain', 'muscle gain', 'body gain', 'bulk', 'bulking', 'fat loss',
+        'weight loss', 'avoid', 'carb', 'carbs', 'macro', 'macros', 'paneer', 'chicken', 'egg', 'eggs',
+        'deadlift', 'hiit', 'sprint', 'advanced'
+      ];
+      return restrictedKeywords.some(kw => q.includes(kw));
+    }
+
+    async function callGeminiTrainerAPI(userQuery, tier) {
+      const apiKey = ""; // Runtime key if available
+      if (!apiKey) {
+        return getBuiltInCoachingResponse(userQuery, tier);
+      }
+
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+      const exerciseCatalogNames = EXERCISES.map(e => `${e.name} (${e.category} - ${e.prescription})`).join(', ');
+
+      const systemInstructionText = tier === 'nova'
+        ? `You are Nova AI (₹49 Basic Plan) inside the "Online Workout" app.
+STRICT RULE: You are ONLY permitted to assist with Stretching routines, Yoga poses/flows, and basic/limited Gym exercise form (such as Bench Press, Squats, Lat Pulldown, Shoulder Press, Push-ups, Plank).
+If the user asks ANY question about daily diet, nutrition, what to eat, what not to eat, protein, supplements, muscle/body gain foods, macros, or advanced athletic/deadlift/HIIT programming, you MUST politely refuse and explain that nutrition and full exercise coaching require upgrading to Nova AI Pro (₹99/month).
+Keep answers concise, clear, and structured with bullet points.`
+        : `You are Nova AI Pro (₹99 All-Access Plan) inside the "Online Workout" app, acting as an elite personal trainer and sports nutritionist.
+You have FULL unrestricted access to assist with:
+1. All 26 exercises in Online Workout: ${exerciseCatalogNames}.
+2. Complete Daily Diet & Nutrition Coaching: daily meal plans (including practical Indian & global options like eggs, paneer, soya chunks, chicken breast, dal, oats, rice, whey protein, bananas, nuts), what foods to eat, what foods not to eat (refined sugars, deep-fried snacks, trans fats, sugary sodas), daily protein targets (1.6g–2.2g/kg bodyweight), muscle/body gain foods, and balanced diet macro breakdowns.
+Keep responses practical, encouraging, and formatted with clear bullet points.`;
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: userQuery }] }],
+            systemInstruction: { parts: [{ text: systemInstructionText }] }
+          })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const result = await response.json();
+        const text = result && result.candidates && result.candidates[0] && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts[0] && result.candidates[0].content.parts[0].text;
+        return text || getBuiltInCoachingResponse(userQuery, tier);
+      } catch (err) {
+        return getBuiltInCoachingResponse(userQuery, tier);
+      }
+    }
+
+    function getBuiltInCoachingResponse(query, tier) {
+      const q = query.toLowerCase();
+      if (tier === 'nova') {
+        if (q.includes('yoga') || q.includes('surya')) {
+          return `**Nova AI (₹49) Yoga Flow (10 Mins):**\n• **Surya Namaskar:** 4 slow rounds syncing nasal breath with movement\n• **Downward Dog (Adho Mukha Svanasana):** Hold 40s to lengthen spine & calves\n• **Cobra Pose (Bhujangasana):** 3 holds × 25s to open the chest\n• **Child's Pose (Balasana):** 60s deep belly breathing recovery`;
+        }
+        if (q.includes('bench') || q.includes('squat') || q.includes('gym') || q.includes('push')) {
+          return `**Nova AI (₹49) Basic Gym Form Guide:**\n• **Barbell Bench Press:** Retract shoulder blades, lower bar to mid-chest at 45°, and press smoothly.\n• **Barbell Back Squats:** Brace your core, sit hips back to parallel, and drive through heels.\n• **Rest:** Take 60–90 seconds between sets and stop 1–2 reps before form breakdown.`;
+        }
+        return `**Nova AI (₹49) Stretching & Mobility Routine:**\n• **Standing Hamstring Stretch:** 3 × 30s per leg with a flat spine\n• **Kneeling Hip Flexor Stretch:** 3 × 35s per side to open tight hips\n• **Cobra Pose & Child's Pose:** 2 rounds × 45s each for lower back relief`;
+      }
+
+      // Nova AI Pro (₹99) comprehensive responses
+      if (q.includes('avoid') || q.includes('not to eat')) {
+        return `**What to Eat vs. What Not to Eat (Nova AI Pro):**\n• **EAT DAILY:** Whole eggs, paneer/tofu, chicken breast/fish, soya chunks, oats, brown/white rice, lentils (dal), seasonal fruits, almonds, and Greek yogurt\n• **DO NOT EAT:** Sugary sodas & packaged juices, deep-fried snacks (samosa, chips, pakora), refined maida bakery items, and processed trans-fat fast foods`;
+      }
+      if (q.includes('protein') || q.includes('diet') || q.includes('muscle') || q.includes('gain') || q.includes('macro')) {
+        return `**Daily Muscle & Body Gain Diet Plan (Nova AI Pro):**\n• **Balanced Macros:** 30% Protein (1.8g/kg bodyweight) • 45% Complex Carbs • 25% Healthy Fats\n• **Breakfast:** 4 whole eggs (or 150g paneer bhurji) + 60g oats with banana & peanut butter\n• **Lunch:** 150g grilled chicken (or 60g soya chunks + dal) + 1.5 cups rice + green salad\n• **Post-Workout:** 1 scoop Whey Protein Isolate + 1 banana\n• **Dinner:** Fish/Chicken/Paneer + 2 multigrain rotis + sautéed vegetables`;
+      }
+      const matchedEx = EXERCISES.find(e => q.includes(e.name.toLowerCase().split(' ')[0]));
+      if (matchedEx) {
+        return `**Nova AI Pro Coaching — ${matchedEx.name}:**\n• **Target:** ${matchedEx.muscle} (${matchedEx.prescription})\n• **Cue 1:** ${matchedEx.cues[0]}\n• **Cue 2:** ${matchedEx.cues[1]}\n• **Cue 3:** ${matchedEx.cues[2]}`;
+      }
+      return `**Nova AI Pro Full Coaching:**\n• Complete today's scheduled exercises in the **Today** tab and record your session in **Timers**.\n• Hit **1.8g protein per kg bodyweight** daily (eggs, paneer, chicken, soya chunks, whey) and sleep 7.5–8 hours for steady muscle & strength gain!`;
+    }
+
+    async function handleNovaChatSubmit(e) {
+      if (e) e.preventDefault();
+      if (appState.isAiGenerating || appState.tier === 'free') return;
+
+      const inputEl = document.getElementById('nova-chat-input');
+      const userText = (inputEl ? inputEl.value : '').trim();
+      if (!userText) return;
+
+      inputEl.value = '';
+      addChatMessage('user', userText);
+
+      // Strict Tier Enforcement for Nova AI (₹49)
+      if (appState.tier === 'nova' && isProRestrictedQuery(userText)) {
+        addChatMessage(
+          'ai',
+          `🔒 **Nutrition & Full Exercise Coaching Requires Nova AI Pro (₹99)**\n\nOn your current **Nova AI (₹49)** plan, I assist strictly with **stretching, yoga, and basic gym exercises**.\n\nUpgrade to **Nova AI Pro (₹99/mo)** to unlock personalized daily diet plans, what to eat & avoid, protein/muscle gain foods, and ad-free coaching!`,
+          true
+        );
+        return;
+      }
+
+      appState.isAiGenerating = true;
+      showTypingIndicator();
+
+      const reply = await callGeminiTrainerAPI(userText, appState.tier);
+      removeTypingIndicator();
+      appState.isAiGenerating = false;
+
+      const needsUpgradeCta = appState.tier === 'nova' && reply.toLowerCase().includes('nova ai pro');
+      addChatMessage('ai', reply, needsUpgradeCta);
+    }
+
+    // ===========================================================
+    // 13. RESILIENT INITIALIZATION (NEVER CRASHES ON LOAD)
+    // ===========================================================
+    function initOnlineWorkoutApp() {
+      try {
+        const now = new Date();
+        const dateEl = document.getElementById('today-date-label');
+        if (dateEl) {
+          dateEl.textContent = now.toLocaleDateString('en-IN', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
+          });
+        }
+
+        // Attach delegated click listener to bottom nav for maximum touch reliability
+        const bottomNav = document.getElementById('bottom-nav');
+        if (bottomNav) {
+          bottomNav.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-tab]');
+            if (btn && btn.dataset.tab) {
+              switchTab(btn.dataset.tab);
+            }
+          });
+        }
+
+        setSubscriptionTier(appState.tier, false);
+        renderWeekdayPills();
+        renderTodayRoutine();
+        updateDailyTimeSummaries();
+        renderExerciseLibrary();
+        setTimerMode('running');
+        renderActivityHistory();
+        switchTab('today');
+      } catch (err) {
+        console.error('Initialization error:', err);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initOnlineWorkoutApp);
+    } else {
+      initOnlineWorkoutApp();
+    }
+  </script>
+</body>
+</html>
